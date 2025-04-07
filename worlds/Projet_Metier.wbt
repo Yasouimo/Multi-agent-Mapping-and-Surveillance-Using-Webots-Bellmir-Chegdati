@@ -9,15 +9,14 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/WoodenBox.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/CardboardBox.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/obstacles/protos/OilBarrel.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/rocks/protos/Rock.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/animals/protos/Cat.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/Roughcast.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.3833068302776636 0.3673098225945043 0.8474428406022936 1.7774784448364824
-  position 1.675819479426909 -3.723856715387674 3.6132970264823405
+  orientation -0.32516116746912443 0.22682132440096023 0.9180535398151408 2.0024035724946003
+  position 3.029882185791122 -3.283600646471054 2.6426875272635724
 }
 TexturedBackground {
 }
@@ -28,12 +27,8 @@ RectangleArena {
   rotation 0 1 0 4.6928012867022945e-06
   floorSize 2 2
 }
-Rock {
-  translation 1.95 0.16 0
-  scale 0.4
-}
 WoodenBox {
-  translation 2.57 -0.59 0.05
+  translation 2.54 0.82 0.05
   size 0.1 0.1 0.1
 }
 OilBarrel {
@@ -43,6 +38,11 @@ OilBarrel {
 }
 CardboardBox {
   translation 1.46 0.42 0.05
+  size 0.1 0.1 0.1
+}
+CardboardBox {
+  translation 1.98 0.15 0.05
+  name "cardboard box(1)"
   size 0.1 0.1 0.1
 }
 E-puck {
@@ -215,11 +215,11 @@ Wall {
   }
 }
 PlasticCrate {
-  translation 0.7 -0.88 0
+  translation 0.7 -0.96 0
   size 0.1 0.1 0.1
 }
 Cat {
-  translation 2.46 0.76 0
+  translation 2.49842 -0.913387 0
   rotation 0 0 1 2.61799
   scale 0.3
 }

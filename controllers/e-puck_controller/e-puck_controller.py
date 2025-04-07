@@ -1,219 +1,223 @@
-from controller import Robot, Emitter, Receiver
+from controller import Robot
 import random
 import math
-import numpy as np
-import json
 
-class MazeExplorer(Robot):
-    def __init__(self):
-        super().__init__()
-        
-        # Hardware setup
-        self.time_step = 64
-        self.max_speed = 6.28
-        
-        # Motors
-        self.left_motor = self.getDevice("left wheel motor")
-        self.right_motor = self.getDevice("right wheel motor")
-        self.left_motor.setPosition(float('inf'))
-        self.right_motor.setPosition(float('inf'))
-        
-        # Sensors
-        self.sensors = [self.getDevice(f'ps{i}') for i in range(8)]
-        for sensor in self.sensors:
-            sensor.enable(self.time_step)
-        
-        # Communication devices (for potential future multi-robot expansion)
-        self.emitter = self.getDevice("emitter")
-        self.receiver = self.getDevice("receiver")
-        self.receiver.enable(self.time_step)
-        
-        # Movement parameters
-        self.forward_speed = 0.6 * self.max_speed
-        self.turn_speed = 0.8 * self.max_speed
-        self.reverse_speed = -0.3 * self.max_speed
-        
-        # Navigation parameters
-        self.avoidance_threshold = 80
-        self.collision_threshold = 150
-        self.stuck_threshold = 20  # Steps without moving
-        
-        # Exploration tracking
-        self.position = [0, 0]  # Relative position tracking
-        self.orientation = 0
-        self.explored_map = {}  # Tracks visited locations
-        self.last_positions = []  # For loop detection
-        self.steps_without_move = 0
-        self.stuck_count = 0
-        
-        # Action space
-        self.actions = {
-            "forward": (self.forward_speed, self.forward_speed),
-            "left_90": (-self.turn_speed, self.turn_speed),
-            "right_90": (self.turn_speed, -self.turn_speed),
-            "left_180": (-self.turn_speed, self.turn_speed),
-            "right_180": (self.turn_speed, -self.turn_speed),
-            "reverse": (self.reverse_speed, self.reverse_speed)
-        }
-        
-        # Action durations (ms)
-        self.action_durations = {
-            "forward": 1000,
-            "left_90": 500,
-            "right_90": 500,
-            "left_180": 1000,
-            "right_180": 1000,
-            "reverse": 300
-        }
-        
-        # Initialize movement
-        self.current_action = None
-        self.action_start_time = 0
+# Initialize the robot
+robot = Robot()
+
+# Time step for the simulation
+time_step = int(robot.getBasicTimeStep())
+
+# Max motor speed (e-puck max speed is ~6.28 rad/s)
+max_speed = 6.28
+
+# Get motors
+left_motor = robot.getDevice("left wheel motor")
+right_motor = robot.getDevice("right wheel motor")
+
+# Enable motors for velocity control
+left_motor.setPosition(float('inf'))
+right_motor.setPosition(float('inf'))
+
+# Get distance sensors (8 sensors on e-puck)
+num_sensors = 8
+sensors = [robot.getDevice(f'ps{i}') for i in range(num_sensors)]
+for sensor in sensors:
+    sensor.enable(time_step)
+
+# ULTRA HIGH SPEED SETTINGS - MUCH FASTER THAN ORIGINAL
+forward_speed = 0.9 * max_speed  # Nearly full speed forward
+turn_speed = 0.8 * max_speed     # Fast turning
+reverse_speed = -0.7 * max_speed # Fast reverse
+
+# Quick detection thresholds
+OBSTACLE_THRESHOLD = 70  # Detect obstacles
+WALL_THRESHOLD = 130     # Detect walls
+
+# Simple path memory (just grid coordinates)
+visited_cells = {}
+robot_x, robot_y = 0, 0
+cell_size = 0.2  # 20cm grid cells
+
+# Simplified Q-learning
+Q_table = {}
+alpha = 0.5      # Fast learning rate
+gamma = 0.8      # Discount factor
+epsilon = 0.3    # Exploration rate
+min_epsilon = 0.1
+
+# Actions: Forward, Left, Right
+actions = ["Forward", "Left", "Right"]
+
+# Get basic state from sensors
+def get_state(sensor_values):
+    # Only use essential sensors: front, left, right
+    front = max(sensor_values[0], sensor_values[7])
+    left = max(sensor_values[5], sensor_values[6])
+    right = max(sensor_values[1], sensor_values[2])
     
-    def get_sensor_state(self):
-        """Process sensor readings into a simplified state"""
-        values = [s.getValue() for s in self.sensors]
-        return {
-            'front': max(values[0], values[7]),
-            'left': max(values[5], values[6]),
-            'right': max(values[1], values[2]),
-            'back': max(values[3], values[4])
-        }
-    
-    def is_blocked(self, sensor_state):
-        """Check if path is blocked"""
-        return (sensor_state['front'] > self.avoidance_threshold or
-                sensor_state['left'] > self.collision_threshold or
-                sensor_state['right'] > self.collision_threshold)
-    
-    def get_position_key(self):
-        """Create a discrete position key for mapping"""
-        return (round(self.position[0] / 0.1), round(self.position[1] / 0.1))
-    
-    def update_position(self, left_speed, right_speed, duration):
-        """Update estimated position based on movement"""
-        # Convert duration to seconds
-        t = duration / 1000.0
-        
-        # Straight movement
-        if abs(left_speed - right_speed) < 0.1:
-            distance = ((left_speed + right_speed) / 2) * t
-            self.position[0] += distance * math.cos(self.orientation)
-            self.position[1] += distance * math.sin(self.orientation)
-        # Turning
+    # Simple binary state
+    state = []
+    for value in [front, left, right]:
+        if value < OBSTACLE_THRESHOLD:
+            state.append(0)  # Clear
         else:
-            rotation = (right_speed - left_speed) * t / 0.02  # 0.02 is approx wheel distance
-            self.orientation = (self.orientation + rotation) % (2 * math.pi)
+            state.append(1)  # Obstacle
+    
+    return tuple(state)
+
+# Main loop
+step_count = 0
+current_action = "Forward"  # Default starting action
+
+while robot.step(time_step) != -1:
+    step_count += 1
+    
+    # Read sensors
+    sensor_values = [sensor.getValue() for sensor in sensors]
+    
+    # Get current state
+    state = get_state(sensor_values)
+    
+    # Update grid position (very simple odometry)
+    # This just approximates position for path tracking purposes
+    current_cell = (int(robot_x/cell_size), int(robot_y/cell_size))
+    visited_cells[current_cell] = visited_cells.get(current_cell, 0) + 1
+    
+    # Check if we're about to hit something
+    front_obstacle = max(sensor_values[0], sensor_values[7]) > WALL_THRESHOLD
+    left_obstacle = max(sensor_values[5], sensor_values[6]) > OBSTACLE_THRESHOLD
+    right_obstacle = max(sensor_values[1], sensor_values[2]) > OBSTACLE_THRESHOLD
+    
+    # Reset the action for this iteration
+    action_taken = None
+    
+    # SIMPLIFIED DIRECT CONTROL LOGIC
+    if front_obstacle:  # About to hit wall - emergency maneuver
+        # Back up quickly
+        left_motor.setVelocity(reverse_speed)
+        right_motor.setVelocity(reverse_speed)
+        robot.step(time_step * 3)  # Just a few steps back
         
-        # Track recent positions for loop detection
-        pos_key = self.get_position_key()
-        self.last_positions.append(pos_key)
-        if len(self.last_positions) > 10:
-            self.last_positions.pop(0)
-        
-        # Check if we're moving
-        if len(self.last_positions) > 5 and len(set(self.last_positions[-5:])) == 1:
-            self.steps_without_move += 1
+        # Turn away from obstacle (random direction if unsure)
+        if left_obstacle and not right_obstacle:
+            # Turn right if left is blocked
+            left_motor.setVelocity(turn_speed)
+            right_motor.setVelocity(-turn_speed * 0.5)
+            action_taken = "Right"
+        elif right_obstacle and not left_obstacle:
+            # Turn left if right is blocked
+            left_motor.setVelocity(-turn_speed * 0.5)
+            right_motor.setVelocity(turn_speed)
+            action_taken = "Left"
         else:
-            self.steps_without_move = 0
-    
-    def is_in_loop(self):
-        """Detect if robot is going in circles"""
-        if len(self.last_positions) < 10:
-            return False
-        
-        # Check if we've visited the same places recently
-        unique_positions = len(set(self.last_positions))
-        return unique_positions < 5
-    
-    def should_explore_new_area(self):
-        """Determine if we should prioritize exploration"""
-        pos_key = self.get_position_key()
-        
-        # Count how many times we've been here
-        visit_count = sum(1 for pos in self.last_positions if pos == pos_key)
-        
-        # If we've been here too much, try something new
-        return visit_count > 3
-    
-    def choose_action(self, sensor_state):
-        """Select an action based on current state"""
-        pos_key = self.get_position_key()
-        
-        # Emergency collision avoidance
-        if sensor_state['front'] > self.collision_threshold:
-            if sensor_state['left'] < sensor_state['right']:
-                return "left_180"
+            # Random sharp turn
+            if random.random() < 0.5:
+                left_motor.setVelocity(turn_speed)
+                right_motor.setVelocity(-turn_speed * 0.5)
+                action_taken = "Right"
             else:
-                return "right_180"
+                left_motor.setVelocity(-turn_speed * 0.5)
+                right_motor.setVelocity(turn_speed)
+                action_taken = "Left"
         
-        # If stuck, try to get unstuck
-        if self.steps_without_move > self.stuck_threshold:
-            self.stuck_count += 1
-            if self.stuck_count % 2 == 0:
-                return "left_180"
-            else:
-                return "right_180"
+        # Turn for a shorter time
+        robot.step(time_step * 5)
         
-        # Avoid obstacles
-        if sensor_state['front'] > self.avoidance_threshold:
-            if sensor_state['left'] < sensor_state['right']:
-                return "left_90"
-            else:
-                return "right_90"
-        
-        # If we're in a loop or visiting the same area too much
-        if self.is_in_loop() or self.should_explore_new_area():
-            return random.choice(["left_90", "right_90", "left_180", "right_180"])
-        
-        # Default to forward motion
-        return "forward"
+        # Update position estimate after maneuver
+        heading_change = random.uniform(-math.pi/4, math.pi/4)  # Approximate heading change
+        robot_x += random.uniform(-0.05, 0.05)  # Small position adjustment
+        robot_y += random.uniform(-0.05, 0.05)
     
-    def execute_action(self, action_name):
-        """Execute the selected action"""
-        left_speed, right_speed = self.actions[action_name]
-        duration = self.action_durations[action_name]
-        
-        self.left_motor.setVelocity(left_speed)
-        self.right_motor.setVelocity(right_speed)
+    elif left_obstacle and not right_obstacle:
+        # Turn slightly right while moving forward
+        left_motor.setVelocity(forward_speed)
+        right_motor.setVelocity(forward_speed * 0.4)
+        action_taken = "Right"
         
         # Update position estimate
-        self.update_position(left_speed, right_speed, duration)
-        
-        # Mark current position as explored
-        self.explored_map[self.get_position_key()] = True
-        
-        # Perform the action for its duration
-        start_time = self.getTime()
-        while self.getTime() - start_time < duration / 1000.0:
-            if self.step(self.time_step) == -1:
-                break
-        
-        # Stop after action completion
-        self.left_motor.setVelocity(0)
-        self.right_motor.setVelocity(0)
-        self.step(self.time_step)
+        robot_x += 0.01 * math.cos(math.pi/8)
+        robot_y += 0.01 * math.sin(math.pi/8)
     
-    def run(self):
-        while self.step(self.time_step) != -1:
-            # Read sensors and get state
-            sensor_state = self.get_sensor_state()
+    elif right_obstacle and not left_obstacle:
+        # Turn slightly left while moving forward
+        left_motor.setVelocity(forward_speed * 0.4)
+        right_motor.setVelocity(forward_speed)
+        action_taken = "Left"
+        
+        # Update position estimate
+        robot_x += 0.01 * math.cos(-math.pi/8)
+        robot_y += 0.01 * math.sin(-math.pi/8)
+    
+    else:
+        # Use Q-learning for general exploration when no immediate obstacles
+        if random.random() < epsilon:  # Explore
+            # Prefer exploring new areas
+            if visited_cells.get(current_cell, 0) > 5:  # Well-visited area
+                # More likely to turn in familiar areas
+                action_taken = random.choice(["Left", "Right", "Forward", "Forward"])
+            else:
+                # More likely to go straight in new areas
+                action_taken = random.choice(["Forward", "Forward", "Forward", "Left", "Right"])
+        else:  # Exploit
+            if state not in Q_table:
+                Q_table[state] = {"Forward": 1.0, "Left": 0.5, "Right": 0.5}
             
-            # Choose and execute action
-            action = self.choose_action(sensor_state)
-            self.execute_action(action)
-            
-            # Reset stuck counter if we moved
-            if action in ["forward", "left_90", "right_90"]:
-                if self.steps_without_move == 0:
-                    self.stuck_count = 0
-            
-            # Print status occasionally
-            if random.random() < 0.05:
-                pos = self.get_position_key()
-                explored = len(self.explored_map)
-                print(f"At {pos} | Action: {action} | Explored: {explored} areas | Steps stuck: {self.steps_without_move}")
-
-# Create and run the robot
-robot = MazeExplorer()
-robot.run()
+            action_taken = max(Q_table[state].items(), key=lambda x: x[1])[0]
+        
+        # Execute selected action at high speed
+        if action_taken == "Forward":
+            left_motor.setVelocity(forward_speed)
+            right_motor.setVelocity(forward_speed)
+            robot_x += 0.02 * math.cos(0)
+            robot_y += 0.02 * math.sin(0)
+        elif action_taken == "Left":
+            left_motor.setVelocity(forward_speed * 0.2)
+            right_motor.setVelocity(forward_speed)
+            robot_x += 0.01 * math.cos(-math.pi/6)
+            robot_y += 0.01 * math.sin(-math.pi/6)
+        elif action_taken == "Right":
+            left_motor.setVelocity(forward_speed)
+            right_motor.setVelocity(forward_speed * 0.2)
+            robot_x += 0.01 * math.cos(math.pi/6)
+            robot_y += 0.01 * math.sin(math.pi/6)
+    
+    # Store the current action for Q-learning
+    current_action = action_taken if action_taken is not None else current_action
+    
+    # Very simple Q-learning update (only when needed)
+    if step_count % 5 == 0 and not front_obstacle:
+        # Get new sensor readings
+        new_sensor_values = [sensor.getValue() for sensor in sensors]
+        new_state = get_state(new_sensor_values)
+        
+        # Initialize Q values if needed
+        if state not in Q_table:
+            Q_table[state] = {"Forward": 1.0, "Left": 0.5, "Right": 0.5}
+        if new_state not in Q_table:
+            Q_table[new_state] = {"Forward": 1.0, "Left": 0.5, "Right": 0.5}
+        
+        # Calculate reward
+        if front_obstacle:
+            reward = -5
+        elif left_obstacle or right_obstacle:
+            reward = -1
+        else:
+            # Reward for exploring new areas
+            if visited_cells.get(current_cell, 0) <= 2:
+                reward = 3
+            else:
+                reward = 1
+        
+        # Update Q-values using current_action
+        best_next_action = max(Q_table[new_state].items(), key=lambda x: x[1])[0]
+        Q_table[state][current_action] += alpha * (reward + gamma * Q_table[new_state][best_next_action] - Q_table[state][current_action])
+    
+    # Decay exploration rate
+    if step_count % 100 == 0:
+        epsilon = max(min_epsilon, epsilon * 0.99)
+    
+    # Debug output
+    if step_count % 500 == 0:
+        unique_cells = len(visited_cells)
+        print(f"Step: {step_count}, Explored: {unique_cells} cells")
