@@ -7,7 +7,7 @@ centralWidgetVisible: 1
 orthographicViewHeight: 1
 textFiles: 0 "controllers/e-puck_controller/e-puck_controller.py"
 consoles: Console:All:All
-renderingDevicePerspectives: e-puck(1):camera;1;1;0.0372881;0.178177
-renderingDevicePerspectives: e-puck(2):camera;1;1;0.675424;0.0635359
-renderingDevicePerspectives: e-puck(3):camera;1;1;0.0279661;0.0345304
-renderingDevicePerspectives: e-puck:camera;1;1;0.107627;0.038674
+renderingDevicePerspectives: e-puck(1):camera;1;0.141667;0.0372881;0.178177
+renderingDevicePerspectives: e-puck(2):camera;1;0.14375;0.688983;0.0441989
+renderingDevicePerspectives: e-puck(3):camera;1;0.13125;0.822882;0.0441991
+renderingDevicePerspectives: e-puck:camera;1;0.141667;0.102542;0.019337
