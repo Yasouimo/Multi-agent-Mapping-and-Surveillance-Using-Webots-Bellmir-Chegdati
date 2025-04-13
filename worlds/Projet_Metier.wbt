@@ -15,8 +15,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.41858439141919335 0.09871083094959367 0.902797474029178 2.7220665774006663
-  position 4.406995791180162 -1.5508763291093337 2.8209972609102847
+  orientation -0.36700578651681903 -0.034613464811428 0.9295744514114612 3.316495333316738
+  position 4.576479306622133 0.16014442766883763 2.566638110399555
 }
 TexturedBackground {
 }
@@ -66,6 +66,7 @@ E-puck {
 }
 E-puck {
   translation 2.27 -0.38 0.01
+  rotation 0 0 1 -5.307179586466759e-06
   name "e-puck(1)"
   controller "e-puck_controller"
   camera_width 640
@@ -233,7 +234,7 @@ PlasticCrate {
   size 0.1 0.1 0.1
 }
 Cat {
-  translation 2.49842 -0.913387 0
-  rotation 0 0 1 2.61799
+  translation 2.40857 -0.758847 0
+  rotation 0 0 -1 -1.3089953071795861
   scale 0.3
 }

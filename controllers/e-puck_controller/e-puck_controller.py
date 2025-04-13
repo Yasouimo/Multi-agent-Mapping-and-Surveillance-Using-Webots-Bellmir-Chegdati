@@ -1,6 +1,8 @@
 from controller import Robot
 import random
 import math
+import os
+import sys
 
 # Initialize the robot
 robot = Robot()
@@ -25,7 +27,7 @@ sensors = [robot.getDevice(f'ps{i}') for i in range(num_sensors)]
 for sensor in sensors:
     sensor.enable(time_step)
 
-# ULTRA HIGH SPEED SETTINGS - MUCH FASTER THAN ORIGINAL
+# ULTRA HIGH SPEED SETTINGS - EXACTLY AS ORIGINAL
 forward_speed = 0.9 * max_speed  # Nearly full speed forward
 turn_speed = 0.8 * max_speed     # Fast turning
 reverse_speed = -0.7 * max_speed # Fast reverse
@@ -49,6 +51,16 @@ min_epsilon = 0.1
 # Actions: Forward, Left, Right
 actions = ["Forward", "Left", "Right"]
 
+# Setup detection system
+try:
+    from detection import ObjectDetector
+    detector = ObjectDetector(robot)
+    detection_enabled = True
+    print("Object detection initialized")
+except Exception as e:
+    print(f"Could not initialize detector: {e}")
+    detection_enabled = False
+
 # Get basic state from sensors
 def get_state(sensor_values):
     # Only use essential sensors: front, left, right
@@ -67,11 +79,16 @@ def get_state(sensor_values):
     return tuple(state)
 
 # Main loop
+print("Starting robot controller with detection")
 step_count = 0
 current_action = "Forward"  # Default starting action
 
 while robot.step(time_step) != -1:
     step_count += 1
+    
+    # Run object detection (very infrequently to maintain speed)
+    if detection_enabled:
+        detector.update(step_count)
     
     # Read sensors
     sensor_values = [sensor.getValue() for sensor in sensors]
@@ -80,7 +97,6 @@ while robot.step(time_step) != -1:
     state = get_state(sensor_values)
     
     # Update grid position (very simple odometry)
-    # This just approximates position for path tracking purposes
     current_cell = (int(robot_x/cell_size), int(robot_y/cell_size))
     visited_cells[current_cell] = visited_cells.get(current_cell, 0) + 1
     
