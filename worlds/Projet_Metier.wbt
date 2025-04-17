@@ -61,6 +61,7 @@ E-puck {
 E-puck {
   translation 0.78 0.61 0
   controller "e-puck_controller"
+  camera_fieldOfView 1.5
   camera_width 640
   camera_height 480
 }
@@ -69,6 +70,7 @@ E-puck {
   rotation 0 0 1 -5.307179586466759e-06
   name "e-puck(1)"
   controller "e-puck_controller"
+  camera_fieldOfView 1.5
   camera_width 640
   camera_height 480
 }
@@ -76,6 +78,7 @@ E-puck {
   translation 2.02 0.66 0
   name "e-puck(2)"
   controller "e-puck_controller"
+  camera_fieldOfView 1.5
   camera_width 640
   camera_height 480
 }
