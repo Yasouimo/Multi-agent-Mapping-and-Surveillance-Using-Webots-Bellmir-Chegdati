@@ -42,9 +42,8 @@ class ObjectDetector:
         # Alarm-triggering classes - only Cat from your class list
         self.alarm_classes = ["Cat"]
         
-        # Alarm sound file path
-        # Make sure this file exists in your Webots project directory
-        self.alarm_sound_file = "mixkit-classic-short-alarm-993.wav"
+        # Updated alarm sound file name
+        self.alarm_sound_file = "Alarm Sound Effect.mp3"
         
         # Detection frequency
         self.detection_interval = 100  # Run detection every 100 steps
@@ -55,26 +54,34 @@ class ObjectDetector:
         print("Object detector initialized with classes:", self.target_classes)
     
     def play_alarm(self):
-        """Play alarm for cat or dog detection"""
+        """Play alarm for cat detection"""
         try:
             if self.speaker:
-                # Try different ways to play sound based on Webots version
+                # Try different approaches based on the error message
                 try:
-                    # Newer Webots API
-                    self.speaker.playSound(self.speaker, self.alarm_sound_file, 1.0, 1.0, 0, 0)
-                    print("⚠️ ALARM: Animal detected! Sound played ⚠️")
+                    # Try with 3 arguments
+                    self.speaker.playSound(self.alarm_sound_file, 1.0, 1.0)
+                    print("⚠️ ALARM: Cat detected! Sound played (3 args) ⚠️")
                 except Exception as e1:
                     try:
-                        # Alternative API
-                        self.speaker.playSound(self.alarm_sound_file, 1.0)
-                        print("⚠️ ALARM: Animal detected! Sound played (alternative method) ⚠️")
+                        # Try with all 5 arguments
+                        self.speaker.playSound(self.alarm_sound_file, 1.0, 1.0, 0.0, False)
+                        print("⚠️ ALARM: Cat detected! Sound played (5 args) ⚠️")
                     except Exception as e2:
-                        print(f"⚠️ ALARM: Animal detected! (Speaker error: {e1}, {e2}) ⚠️")
+                        # Finally try with just the filename
+                        try:
+                            self.speaker.playSound(self.alarm_sound_file)
+                            print("⚠️ ALARM: Cat detected! Sound played (1 arg) ⚠️")
+                        except Exception as e3:
+                            print(f"⚠️ ALARM: Cat detected! (Speaker errors: {e1}, {e2}, {e3}) ⚠️")
             else:
                 # No speaker but still notify
-                print("⚠️ ALARM: Animal detected! (No speaker available) ⚠️")
+                print("⚠️ ALARM: Cat detected! (No speaker available) ⚠️")
         except Exception as e:
-            print(f"⚠️ ALARM: Animal detected! (Error playing sound: {e}) ⚠️")
+            print(f"⚠️ ALARM: Cat detected! (Error playing sound: {e}) ⚠️")
+        
+        # Always print a console notification as backup
+        print("🔊 ALARM! ALARM! Cat detected! 🔊")
     
     def process_frame(self):
         """Process camera frame and save detected objects as images"""
