@@ -28,6 +28,12 @@ class ObjectDetector:
             self.speaker = robot.getDevice("speaker")
             if self.speaker:
                 print("Speaker initialized")
+                # Configure speaker for non-TTS use if possible
+                try:
+                    self.speaker.setEngine("none")
+                    self.speaker.setLanguage("none")
+                except:
+                    pass
         except Exception as e:
             print(f"Speaker not available: {e}")
             self.speaker = None
@@ -62,29 +68,24 @@ class ObjectDetector:
             return
             
         try:
-            # Based on error messages, we need right parameter first (true for all channels)
-            # then sound file, volume, pitch, balance, and loop
-            self.speaker.playSound(
-                True,  # right channel (boolean)
-                self.alarm_sound_file,  # sound file
-                1.0,   # volume (0.0-1.0)
-                1.0,   # pitch (1.0 = normal)
-                0.0,   # balance (-1.0 = left, 1.0 = right, 0.0 = center)
-                False  # loop (boolean)
-            )
-            print("⚠️ Alarm sound playing! ⚠️")
+            # Try the speak method first as it worked in the previous attempt
+            self.speaker.speak(self.alarm_sound_file, 1.0)
+            print("⚠️ Alarm sound playing via speak method ⚠️")
         except Exception as e:
-            print(f"⚠️ Could not play alarm sound: {e} ⚠️")
+            print(f"⚠️ Speak method failed: {e} ⚠️")
             
-            # Alternative method for different Webots versions
+            # Fall back to various playSound attempts if speak fails
             try:
-                # For webots R2023a and newer
-                self.speaker.setEngine("none")  # Use default audio engine
-                self.speaker.setLanguage("none")  # Not using TTS
-                self.speaker.speak(self.alarm_sound_file, 1.0)
-                print("⚠️ Using alternative speak method for alarm ⚠️")
+                # Try first with what the error suggests we're missing (loop parameter)
+                self.speaker.playSound(self.alarm_sound_file, 1.0, 1.0, 0.0, False)
+                print("⚠️ Alarm sound playing via playSound (5 args) ⚠️")
             except Exception as e2:
-                print(f"⚠️ Alternative alarm method also failed: {e2} ⚠️")
+                try:
+                    # Try the 6-arg version from previous error
+                    self.speaker.playSound(True, self.alarm_sound_file, 1.0, 1.0, 0.0, False)
+                    print("⚠️ Alarm sound playing via playSound (6 args) ⚠️")
+                except Exception as e3:
+                    print(f"⚠️ All sound methods failed: {e3} ⚠️")
     
     def process_frame(self):
         """Process camera frame and save detected objects as images"""
