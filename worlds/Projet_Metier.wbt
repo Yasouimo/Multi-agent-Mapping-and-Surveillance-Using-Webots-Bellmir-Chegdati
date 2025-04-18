@@ -238,7 +238,7 @@ PlasticCrate {
   size 0.1 0.1 0.1
 }
 Cat {
-  translation 2.60626 -0.828352 0
+  translation 2.59126 -0.802372 0
   rotation 0 0 1 2.09439
   scale 0.3
 }

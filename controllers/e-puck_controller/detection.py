@@ -55,33 +55,36 @@ class ObjectDetector:
     
     def play_alarm(self):
         """Play alarm for cat detection"""
-        try:
-            if self.speaker:
-                # Try different approaches based on the error message
-                try:
-                    # Try with 3 arguments
-                    self.speaker.playSound(self.alarm_sound_file, 1.0, 1.0)
-                    print("⚠️ ALARM: Cat detected! Sound played (3 args) ⚠️")
-                except Exception as e1:
-                    try:
-                        # Try with all 5 arguments
-                        self.speaker.playSound(self.alarm_sound_file, 1.0, 1.0, 0.0, False)
-                        print("⚠️ ALARM: Cat detected! Sound played (5 args) ⚠️")
-                    except Exception as e2:
-                        # Finally try with just the filename
-                        try:
-                            self.speaker.playSound(self.alarm_sound_file)
-                            print("⚠️ ALARM: Cat detected! Sound played (1 arg) ⚠️")
-                        except Exception as e3:
-                            print(f"⚠️ ALARM: Cat detected! (Speaker errors: {e1}, {e2}, {e3}) ⚠️")
-            else:
-                # No speaker but still notify
-                print("⚠️ ALARM: Cat detected! (No speaker available) ⚠️")
-        except Exception as e:
-            print(f"⚠️ ALARM: Cat detected! (Error playing sound: {e}) ⚠️")
-        
-        # Always print a console notification as backup
         print("🔊 ALARM! ALARM! Cat detected! 🔊")
+        
+        if not self.speaker:
+            print("⚠️ No speaker available for audio alarm ⚠️")
+            return
+            
+        try:
+            # Based on error messages, we need right parameter first (true for all channels)
+            # then sound file, volume, pitch, balance, and loop
+            self.speaker.playSound(
+                True,  # right channel (boolean)
+                self.alarm_sound_file,  # sound file
+                1.0,   # volume (0.0-1.0)
+                1.0,   # pitch (1.0 = normal)
+                0.0,   # balance (-1.0 = left, 1.0 = right, 0.0 = center)
+                False  # loop (boolean)
+            )
+            print("⚠️ Alarm sound playing! ⚠️")
+        except Exception as e:
+            print(f"⚠️ Could not play alarm sound: {e} ⚠️")
+            
+            # Alternative method for different Webots versions
+            try:
+                # For webots R2023a and newer
+                self.speaker.setEngine("none")  # Use default audio engine
+                self.speaker.setLanguage("none")  # Not using TTS
+                self.speaker.speak(self.alarm_sound_file, 1.0)
+                print("⚠️ Using alternative speak method for alarm ⚠️")
+            except Exception as e2:
+                print(f"⚠️ Alternative alarm method also failed: {e2} ⚠️")
     
     def process_frame(self):
         """Process camera frame and save detected objects as images"""
@@ -134,37 +137,40 @@ class ObjectDetector:
             if results and len(results) > 0:
                 # Get result data
                 result = results[0]
-                if len(result.boxes) > 0:
+                if hasattr(result, 'boxes') and len(result.boxes) > 0:
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     detections_found = True
                     
                     # Process each detection
                     for i, box in enumerate(result.boxes):
-                        # Get class info
-                        cls_id = int(box.cls[0])
-                        cls_name = self.model.names[cls_id]
-                        confidence = float(box.conf[0])
-                        
-                        # Only process our target classes with good confidence
-                        if cls_name in self.target_classes and confidence > 0.3:
-                            # Get bounding box
-                            x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        try:
+                            # Get class info
+                            cls_id = int(box.cls[0])
+                            cls_name = self.model.names[cls_id]
+                            confidence = float(box.conf[0])
                             
-                            # Draw bounding box on copy of image
-                            img_with_box = img.copy()
-                            cv2.rectangle(img_with_box, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                            cv2.putText(img_with_box, f"{cls_name} {confidence:.2f}", 
-                                       (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                            
-                            # Save image with detection
-                            filename = f"{self.detection_folder}/{timestamp}_{cls_name}_{confidence:.2f}.jpg"
-                            cv2.imwrite(filename, img_with_box)
-                            print(f"Saved detection: {cls_name} with confidence {confidence:.2f}")
-                            
-                            # Check if we need to trigger alarm
-                            if cls_name in self.alarm_classes:
-                                alarm_triggered = True
-                                print(f"Alarm class detected: {cls_name}")
+                            # Only process our target classes with good confidence
+                            if cls_name in self.target_classes and confidence > 0.3:
+                                # Get bounding box
+                                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                                
+                                # Draw bounding box on copy of image
+                                img_with_box = img.copy()
+                                cv2.rectangle(img_with_box, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                                cv2.putText(img_with_box, f"{cls_name} {confidence:.2f}", 
+                                           (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                                
+                                # Save image with detection
+                                filename = f"{self.detection_folder}/{timestamp}_{cls_name}_{confidence:.2f}.jpg"
+                                cv2.imwrite(filename, img_with_box)
+                                print(f"Saved detection: {cls_name} with confidence {confidence:.2f}")
+                                
+                                # Check if we need to trigger alarm
+                                if cls_name in self.alarm_classes:
+                                    alarm_triggered = True
+                                    print(f"Alarm class detected: {cls_name}")
+                        except Exception as box_err:
+                            print(f"Error processing detection box: {box_err}")
             
             if not detections_found:
                 print("No detections in this frame")
