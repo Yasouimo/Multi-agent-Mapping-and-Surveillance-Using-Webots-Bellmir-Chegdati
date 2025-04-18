@@ -87,7 +87,7 @@ while robot.step(time_step) != -1:
     step_count += 1
     
     # Run object detection (very infrequently to maintain speed)
-    if detection_enabled:
+    if detection_enabled and step_count % 100 == 0:  # Make sure detection runs periodically
         detector.update(step_count)
     
     # Read sensors
