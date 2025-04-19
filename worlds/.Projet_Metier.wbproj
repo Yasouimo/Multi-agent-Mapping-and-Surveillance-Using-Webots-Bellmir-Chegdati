@@ -9,5 +9,5 @@ textFiles: 0 "controllers/e-puck_controller/e-puck_controller.py"
 consoles: Console:All:All
 renderingDevicePerspectives: e-puck(1):camera;1;0.192969;0.0449153;0.0662977
 renderingDevicePerspectives: e-puck(2):camera;1;0.129819;0.768644;0.779005
-renderingDevicePerspectives: e-puck(3):camera;1;0.195833;0.0610176;0.325967
+renderingDevicePerspectives: e-puck(3):camera;1;0.220833;0.376271;0.679558
 renderingDevicePerspectives: e-puck:camera;1;0.176228;0.0322036;0.701657
