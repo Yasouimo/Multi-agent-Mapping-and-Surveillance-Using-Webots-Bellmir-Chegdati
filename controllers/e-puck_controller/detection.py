@@ -4,6 +4,10 @@ import os
 import cv2
 from datetime import datetime
 from ultralytics import YOLO
+import subprocess
+import platform
+import threading
+import time
 
 class ObjectDetector:
     def __init__(self, robot):
@@ -23,19 +27,14 @@ class ObjectDetector:
             self.camera_width = 0
             self.camera_height = 0
         
-        # Get speaker
+        # Speaker initialization (keeping for compatibility)
         try:
             self.speaker = robot.getDevice("speaker")
             if self.speaker:
-                print("Speaker initialized")
-                # Configure speaker for non-TTS use if possible
-                try:
-                    self.speaker.setEngine("none")
-                    self.speaker.setLanguage("none")
-                except:
-                    pass
+                print("Robot speaker initialized")
+                self.speaker.enable(self.time_step)
         except Exception as e:
-            print(f"Speaker not available: {e}")
+            print(f"Robot speaker not available: {e}")
             self.speaker = None
         
         # Create detection folder
@@ -48,8 +47,8 @@ class ObjectDetector:
         # Alarm-triggering classes - only Cat from your class list
         self.alarm_classes = ["Cat"]
         
-        # Updated alarm sound file name
-        self.alarm_sound_file = "Alarm Sound Effect.mp3"
+        # Updated alarm sound file path (ensure this file exists in the project directory)
+        self.alarm_sound_file = "mixkit-classic-short-alarm-993.wav"
         
         # Detection frequency
         self.detection_interval = 100  # Run detection every 100 steps
@@ -57,35 +56,83 @@ class ObjectDetector:
         # Load model lazily
         self.model = None
         
+        # Track if alarm is currently playing to avoid overlap
+        self.alarm_playing = False
+        self.alarm_thread = None
+        
+        # Operating system check for PC sound playback method
+        self.system = platform.system()
+        
         print("Object detector initialized with classes:", self.target_classes)
+    
+    def play_pc_sound(self):
+        """Play alarm sound through PC speakers"""
+        if not os.path.exists(self.alarm_sound_file):
+            print(f"⚠️ Warning: Alarm sound file {self.alarm_sound_file} not found! ⚠️")
+            return False
+            
+        try:
+            if self.system == "Windows":
+                # Simple method - just use the system default program to play the sound
+                # Get the absolute path and normalize it
+                sound_path = os.path.abspath(self.alarm_sound_file).replace('\\', '\\\\')
+                
+                # Use a simpler method in PowerShell to play the sound
+                ps_command = f'Start-Process -FilePath "{sound_path}" -WindowStyle Hidden'
+                subprocess.call(['powershell', '-Command', ps_command])
+                
+                # Alternative fallback if the above fails - use the built-in Windows beep
+                try:
+                    import winsound
+                    winsound.Beep(1000, 1000)  # 1000 Hz for 1 second
+                except:
+                    pass
+                    
+            elif self.system == "Darwin":  # macOS
+                # macOS - use afplay
+                subprocess.call(['afplay', self.alarm_sound_file])
+            else:  # Linux and others
+                # Try with various players available on Linux
+                for player in ['mpg123', 'mplayer', 'ffplay', 'paplay', 'aplay']:
+                    try:
+                        if player == 'ffplay':
+                            # ffplay has different syntax
+                            subprocess.call([player, '-nodisp', '-autoexit', self.alarm_sound_file])
+                        else:
+                            subprocess.call([player, self.alarm_sound_file])
+                        return True
+                    except FileNotFoundError:
+                        continue
+            return True
+            
+        except Exception as e:
+            print(f"⚠️ Error playing PC sound: {e} ⚠️")
+            # ASCII Bell character - should make a beep on most terminals
+            print('\a')
+            return False
+    
+    def alarm_thread_function(self):
+        """Function to run in a separate thread for playing the alarm"""
+        print("\n" + "!" * 60)
+        print("🔊 ALARM! ALARM! Cat detected! 🔊")
+        print("!" * 60 + "\n")
+        
+        result = self.play_pc_sound()
+        time.sleep(2)  # Wait a moment before allowing another alarm
+        self.alarm_playing = False
     
     def play_alarm(self):
         """Play alarm for cat detection"""
-        print("🔊 ALARM! ALARM! Cat detected! 🔊")
-        
-        if not self.speaker:
-            print("⚠️ No speaker available for audio alarm ⚠️")
+        if self.alarm_playing:
+            print("⚠️ Alarm already playing, not starting another instance ⚠️")
             return
             
-        try:
-            # Try the speak method first as it worked in the previous attempt
-            self.speaker.speak(self.alarm_sound_file, 1.0)
-            print("⚠️ Alarm sound playing via speak method ⚠️")
-        except Exception as e:
-            print(f"⚠️ Speak method failed: {e} ⚠️")
-            
-            # Fall back to various playSound attempts if speak fails
-            try:
-                # Try first with what the error suggests we're missing (loop parameter)
-                self.speaker.playSound(self.alarm_sound_file, 1.0, 1.0, 0.0, False)
-                print("⚠️ Alarm sound playing via playSound (5 args) ⚠️")
-            except Exception as e2:
-                try:
-                    # Try the 6-arg version from previous error
-                    self.speaker.playSound(True, self.alarm_sound_file, 1.0, 1.0, 0.0, False)
-                    print("⚠️ Alarm sound playing via playSound (6 args) ⚠️")
-                except Exception as e3:
-                    print(f"⚠️ All sound methods failed: {e3} ⚠️")
+        self.alarm_playing = True
+        
+        # Start a thread to play the alarm sound
+        self.alarm_thread = threading.Thread(target=self.alarm_thread_function)
+        self.alarm_thread.daemon = True
+        self.alarm_thread.start()
     
     def process_frame(self):
         """Process camera frame and save detected objects as images"""
