@@ -50,6 +50,9 @@ Robot {
   rotation IS rotation
   scale 2 2 2  
   children [
+    Speaker {
+      name "speaker"
+    }
     HingeJoint {
       jointParameters HingeJointParameters {
         axis 0 1 0
