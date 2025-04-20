@@ -6,7 +6,7 @@ from datetime import datetime
 from ultralytics import YOLO
 import threading
 import time
-from playsound import playsound  # Importer playsound pour jouer le son sur le PC
+import winsound  # Replace playsound with winsound which is more reliable on Windows
 
 class ObjectDetector:
     def __init__(self, robot):
@@ -52,10 +52,16 @@ class ObjectDetector:
         print("Object detector initialized with classes:", self.target_classes)
 
     def play_robot_alarm(self):
-        """Play the alarm sound on the PC using the playsound library"""
+        """Play the alarm sound on the PC using winsound instead of playsound"""
         try:
             print("🔊 Playing alarm on PC...")
-            playsound(self.alarm_sound_file)
+            # Check if the sound file exists
+            if not os.path.exists(self.alarm_sound_file):
+                print(f"⚠️ Sound file not found: {self.alarm_sound_file}")
+                return False
+                
+            # Use winsound.PlaySound which is more reliable than playsound
+            winsound.PlaySound(self.alarm_sound_file, winsound.SND_FILENAME)
             return True
         except Exception as e:
             print(f"⚠️ Error playing sound on PC: {e}")
