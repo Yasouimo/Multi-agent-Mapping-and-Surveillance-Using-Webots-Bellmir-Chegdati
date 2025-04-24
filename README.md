@@ -73,7 +73,7 @@ To set up the environment for this project, follow these steps:
 ### Step 1: Clone the project
 
 ```bash
-https://github.com/Yasouimo/Multi-agent-Mapping-and-Surveillance-Using-Webots-Bellmir-Chegdati.git
+git clone https://github.com/Yasouimo/Multi-agent-Mapping-and-Surveillance-Using-Webots-Bellmir-Chegdati.git
 ```
 
 ### Step 2: Install Dependencies
