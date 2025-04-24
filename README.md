@@ -68,8 +68,9 @@ The YOLOv8 model's high precision and recall rates ensure that foreign objects a
 ## Installation
 To set up the environment for this project, follow these steps:
 
-### Step 1: Install Python Dependencies
-Open the Command Prompt (CMD.EXE) and install the required Python libraries:
+## Installation
+
+### Step 1: Install Dependencies
 
 ```bash
 # Navigate to your Python installation directory
