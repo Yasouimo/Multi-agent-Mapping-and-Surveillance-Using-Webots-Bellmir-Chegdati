@@ -97,3 +97,5 @@ C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
 
 - LinkedIn: [Bellmir Yahya](https://www.linkedin.com/in/yahya-bellmir-a54176284/) & [Chegdati Chouaib](https://www.linkedin.com/in/chouaib-chegdati-75a3a3302/)
 
+- Supervised By: **Pr.Hajji Tarik**
+
