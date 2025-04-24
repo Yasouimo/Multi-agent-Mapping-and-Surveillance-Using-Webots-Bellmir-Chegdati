@@ -74,3 +74,11 @@ Open the Command Prompt (CMD.EXE) and install the required Python libraries:
 ```bash
 # Navigate to your Python installation directory
 C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
+
+### Step 2: Configure Robot Controllers
+
+1. In Webots, open the world file (.wbt) from the project
+2. For each e-Puck robot in the simulation:
+   - Double-click the robot to open its properties
+   - Set the controller field to "epuck_controller" (or your controller name)
+   - Make sure the "Synchronization" checkbox is ticked
