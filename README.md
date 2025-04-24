@@ -2,6 +2,7 @@
 
 ![Project Overview](docs/project_overview.png)
 
+
 ## Introduction
 
 This project explores the collaborative capabilities of e-Puck robots in map parsing and surveillance. Utilizing the Webots simulation environment, the e-Puck robots are programmed to work cooperatively to map a maze environment and perform surveillance tasks. The robots use Q-learning to navigate through the maze while avoiding obstacles and cover the entire map. Additionally, they utilize YOLOv8 for object detection - if a cat is detected, an alarm is activated signifying the presence of a stray object that should not be in the monitored area.
