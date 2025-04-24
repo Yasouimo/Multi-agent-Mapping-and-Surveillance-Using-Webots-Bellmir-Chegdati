@@ -1,6 +1,6 @@
 # Multi Agent Mapping and Surveillance with e-Puck Webots Robots
 
-![Project Overview](docs/project_overview.png)
+![Project Overview](docs/project_world.png)
 
 
 ## Introduction
