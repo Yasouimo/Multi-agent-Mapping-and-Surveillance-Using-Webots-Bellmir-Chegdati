@@ -37,7 +37,7 @@ Each robot in the team is equipped with cameras that capture real-time images of
 2. **Object Detection**: The captured images are sent to a YOLOv8 model, which performs object detection to identify various objects within the images.
 3. **Alert Generation**: If a foreign object (e.g., a cat) is detected, the robot sends an alarm, providing details about the detected object and its location.
 
-![Real-time Predictions](docs/vision.jpg)
+![Real-time Predictions](docs/vision.png)
 
 The above image shows an example of real-time predictions made by the YOLOv8 model. The model detects and classifies objects, drawing bounding boxes around them with confidence scores.
 
@@ -70,9 +70,7 @@ To set up the environment for this project, follow these steps:
 
 ### Step 1: Create a Python Environment
 
-First, ensure you have Anaconda installed. You can download and install it from [Anaconda's official website](https://www.anaconda.com/products/distribution).
-
-Create a new conda environment named `robot_env`:
+Open the DOS console (CMD.EXE) and type:
 
 ```bash
-conda create --name robot_env python=3.8
+PYTHON_PATH\Scripts\pip.exe install opencv-python
