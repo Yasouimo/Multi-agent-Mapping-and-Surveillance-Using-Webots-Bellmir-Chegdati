@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 5
+names: ['CardboardBox', 'Cat', 'OilBarrel', 'PlasticCrate', 'WoodenBox']
+
+roboflow:
+  workspace: yasouimo
+  project: webots_maze2
+  version: 4
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/yasouimo/webots_maze2/dataset/4
