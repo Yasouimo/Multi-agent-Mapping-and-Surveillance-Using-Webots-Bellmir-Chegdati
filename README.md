@@ -70,14 +70,20 @@ To set up the environment for this project, follow these steps:
 
 ## Installation
 
-### Step 1: Install Dependencies
+### Step 1: Clone the project
+
+```bash
+https://github.com/Yasouimo/Multi-agent-Mapping-and-Surveillance-Using-Webots-Bellmir-Chegdati.git
+```
+
+### Step 2: Install Dependencies
 
 ```bash
 # Navigate to your Python installation directory
 C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
 ```
 
-### Step 2: Configure Robot Controllers
+### Step 3: Configure Robot Controllers
 
 1. In Webots, open the world file (.wbt) from the project
 2. For each e-Puck robot in the simulation:
