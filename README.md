@@ -1,6 +1,6 @@
 # Multi Agent Mapping and Surveillance with e-Puck Webots Robots
 
-![Project Overview](docs/project_overview.png)
+![Project Overview](docs/project_world.png)
 
 
 ## Introduction
@@ -66,12 +66,27 @@ These benchmarking results demonstrate the superior performance of the YOLOv8 mo
 The YOLOv8 model's high precision and recall rates ensure that foreign objects are detected accurately and promptly, contributing to the overall effectiveness of the surveillance and map parsing system.
 
 ## Installation
-
 To set up the environment for this project, follow these steps:
 
-### Step 1: Create a Python Environment
+## Installation
 
-Open the DOS console (CMD.EXE) and type:
+### Step 1: Clone the project
 
 ```bash
-PYTHON_PATH\Scripts\pip.exe install opencv-python
+git clone https://github.com/Yasouimo/Multi-agent-Mapping-and-Surveillance-Using-Webots-Bellmir-Chegdati.git
+```
+
+### Step 2: Install Dependencies
+
+```bash
+# Navigate to your Python installation directory
+C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
+```
+
+### Step 3: Configure Robot Controllers
+
+1. In Webots, open the world file (.wbt) from the project
+2. For each e-Puck robot in the simulation:
+   - Double-click the robot to open its properties
+   - Set the controller field to "epuck_controller" (or your custom controller name)
+   - Make sure the "Synchronization" checkbox is ticked
