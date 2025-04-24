@@ -68,7 +68,6 @@ The YOLOv8 model's high precision and recall rates ensure that foreign objects a
 ## Installation
 To set up the environment for this project, follow these steps:
 
-## Installation
 
 ### Step 1: Clone the project
 
