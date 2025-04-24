@@ -66,12 +66,11 @@ These benchmarking results demonstrate the superior performance of the YOLOv8 mo
 The YOLOv8 model's high precision and recall rates ensure that foreign objects are detected accurately and promptly, contributing to the overall effectiveness of the surveillance and map parsing system.
 
 ## Installation
-
 To set up the environment for this project, follow these steps:
 
-### Step 1: Create a Python Environment
-
-Open the DOS console (CMD.EXE) and type:
+### Step 1: Install Python Dependencies
+Open the Command Prompt (CMD.EXE) and install the required Python libraries:
 
 ```bash
-PYTHON_PATH\Scripts\pip.exe install opencv-python
+# Navigate to your Python installation directory
+C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
