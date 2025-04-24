@@ -93,9 +93,13 @@ C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
 
 ## Contact :
 
-- Project Creators: [Bellmir Yahya](https://github.com/Yasouimo) & [Chegdati Chouaib](https://github.com/chouaibneuralnets)
+- Project Creators : **Bellmir Yahya** & **Chegdati Chouaib**
 
-- LinkedIn: [Bellmir Yahya](https://www.linkedin.com/in/yahya-bellmir-a54176284/) & [Chegdati Chouaib](https://www.linkedin.com/in/chouaib-chegdati-75a3a3302/)
+- Github : [Bellmir Yahya](https://github.com/Yasouimo) & [Chegdati Chouaib](https://github.com/chouaibneuralnets)
 
-- Supervised By: **Pr.Hajji Tarik**
+- LinkedIn : [Bellmir Yahya](https://www.linkedin.com/in/yahya-bellmir-a54176284/) & [Chegdati Chouaib](https://www.linkedin.com/in/chouaib-chegdati-75a3a3302/)
+
+- Supervised By : **Pr.Hajji Tarik**
+
+- Associated with : **ENSAM Meknès**
 
