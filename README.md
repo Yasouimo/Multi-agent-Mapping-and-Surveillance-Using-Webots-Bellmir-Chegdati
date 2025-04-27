@@ -74,7 +74,7 @@ Webots is an open source and multi-platform desktop application used to simulate
 
 Navigate to the cyberbotcis website to download the software.
 
-[Webots Download]([https://github.com/Yasouimo](https://cyberbotics.com/))
+[Webots Download](https://cyberbotics.com/)
 
 ### Step 2: Clone the project
 
