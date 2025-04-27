@@ -70,6 +70,11 @@ To set up the environment for this project, follow these steps:
 
 ### Step 1: Install Webots
 
+Webots is an open source and multi-platform desktop application used to simulate robots. It provides a complete development environment to model, program and simulate robots.
+
+Navigate to the cyberbotcis website to download the software.
+
+[Webots Download]([https://github.com/Yasouimo](https://cyberbotics.com/))
 
 ### Step 2: Clone the project
 
