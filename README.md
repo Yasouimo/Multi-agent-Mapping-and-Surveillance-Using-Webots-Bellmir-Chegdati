@@ -5,7 +5,7 @@
 
 ## Introduction
 
-This project explores the collaborative capabilities of e-Puck robots in map parsing and surveillance. Utilizing the Webots simulation environment, the e-Puck robots are programmed to work cooperatively to map a maze environment and perform surveillance tasks. The robots use Q-learning to navigate through the maze while avoiding obstacles and cover the entire map. Additionally, they utilize YOLOv8 for object detection - if a cat is detected, an alarm is activated signifying the presence of a stray object that should not be in the monitored area.
+This project explores the collaborative capabilities of **e-Puck robots** in map parsing and surveillance. Utilizing the **Webots** simulation environment, the **e-Puck** robots are programmed to work **cooperatively** to map a maze environment and perform surveillance tasks. The robots use **Q-learning** to navigate through the maze while avoiding **obstacles** and cover the entire map. Additionally, they utilize **YOLOv8** for object detection - if a **cat** is detected, an **alarm** is activated signifying the presence of a stray object that should not be in the monitored area.
 
 ## Workflow of the Team
 
@@ -50,6 +50,7 @@ The performance of the YOLOv8 model was evaluated using standard metrics such as
 
 ![Confusion Matrix](docs/results1.png) 
 
+
 #### Benchmarking Results
 
 The following table presents the benchmarking results for the YOLOv8 model against other popular object detection models. The benchmarks include metrics like inference time, precision, recall, and mAP.
@@ -68,25 +69,45 @@ The YOLOv8 model's high precision and recall rates ensure that foreign objects a
 ## Installation
 To set up the environment for this project, follow these steps:
 
-## Installation
+### Step 1: Install Webots
 
-### Step 1: Clone the project
+Webots is an open source and multi-platform desktop application used to simulate robots. It provides a complete development environment to model, program and simulate robots.
+
+Navigate to the cyberbotcis website to download the software.
+
+[Webots Download](https://cyberbotics.com/)
+
+### Step 2: Clone the project
 
 ```bash
 git clone https://github.com/Yasouimo/Multi-agent-Mapping-and-Surveillance-Using-Webots-Bellmir-Chegdati.git
 ```
 
-### Step 2: Install Dependencies
+### Step 3: Install Dependencies
 
 ```bash
 # Navigate to your Python installation directory
 C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
 ```
 
-### Step 3: Configure Robot Controllers
+### Step 4: Configure Robot Controllers
 
 1. In Webots, open the world file (.wbt) from the project
 2. For each e-Puck robot in the simulation:
    - Double-click the robot to open its properties
    - Set the controller field to "epuck_controller" (or your custom controller name)
    - Make sure the "Synchronization" checkbox is ticked
+
+
+## Contact :
+
+- Project Creators : **Bellmir Yahya** & **Chegdati Chouaib**
+
+- Github : [Bellmir Yahya](https://github.com/Yasouimo) & [Chegdati Chouaib](https://github.com/chouaibneuralnets)
+
+- LinkedIn : [Bellmir Yahya](https://www.linkedin.com/in/yahya-bellmir-a54176284/) & [Chegdati Chouaib](https://www.linkedin.com/in/chouaib-chegdati-75a3a3302/)
+
+- Supervised By : **Pr.Hajji Tarik**
+
+- Associated with : **ENSAM Meknès**
+
