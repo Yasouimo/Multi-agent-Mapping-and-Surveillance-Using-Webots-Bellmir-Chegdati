@@ -50,6 +50,7 @@ The performance of the YOLOv8 model was evaluated using standard metrics such as
 
 ![Confusion Matrix](docs/results1.png) 
 
+
 #### Benchmarking Results
 
 The following table presents the benchmarking results for the YOLOv8 model against other popular object detection models. The benchmarks include metrics like inference time, precision, recall, and mAP.
