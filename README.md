@@ -9,28 +9,34 @@ This project explores the collaborative capabilities of **e-Puck robots** in map
 
 ## Project Strucutre
 
-📁 yasouimo-multi-agent-mapping-and-surveillance-using-webots-bellmir-chegdati  
-├── 📄 README.md  
-├── 📄 requirements.txt  
-├── 📁 controllers/  
-│   └── 📁 e-puck_controller/  
-│       ├── e-puck_controller.py  
-│       ├── detection.py  
-│       ├── robot_communication.py  
-│       ├── best.pt  
-│       ├── robot_detections.csv 
-│       └── 📁detections
-│           ├──20250429_183943_PlasticCrate_0.97
-│           ├──20250429_184021_Cat_0.82
-│           ├──20250501_135744_OilBarrel_0.88
-├── 📁 Notebook/  
-│   ├── Webots_Yolo_Bellmir_Chegdati.ipynb  
-│   └── 📁 data/  
-│       ├── data.yaml  
-│       ├── train/  
-│       │   ├── images/  📷 ~50+ images  
-│       │   └── labels/  🏷️ ~50+ label files  
-├── 📁 docs/  
+yasouimo-multi-agent-mapping-and-surveillance-using-webots-bellmir-chegdati/
+│
+├── README.md                    # Project documentation and setup guide
+├── requirements.txt             # Python package dependencies
+│
+├── controllers/                 # Robot control implementations
+│   └── e-puck_controller/       # Main controller package
+│       ├── e-puck_controller.py # Core robot behavior and movement logic
+│       ├── detection.py         # Object detection processing
+│       ├── robot_communication.py # Multi-agent communication protocol
+│       ├── best.pt              # Pretrained YOLOv5 model weights
+│       ├── robot_detections.csv # CSV log of all detections
+│       └── detections/          # Visual detection archives
+│           ├── 20250429_183943_PlasticCrate_0.97.jpg
+│           ├── 20250429_184021_Cat_0.82.jpg
+│           └── 20250501_135744_OilBarrel_0.88.jpg
+│
+├── Notebook/                    # Development and training resources
+│   ├── Webots_Yolo_Bellmir_Chegdati.ipynb # Jupyter notebook
+│   └── data/                    # YOLO training dataset
+│       ├── data.yaml            # Dataset configuration
+│       └── train/              # Training data
+│           ├── images/          # 50+ training images
+│           └── labels/          # YOLO annotation files
+│
+└── docs/                        # Project documentation
+    ├── project_world.png          
+    └── robot_workflow.png         
 
 
 ## Workflow of the Team
