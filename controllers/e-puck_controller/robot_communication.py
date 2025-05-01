@@ -29,6 +29,8 @@ class RobotCommunicator:
         self.max_range = max_range
         self.robot_id = None  # Will be set on first broadcast
         
+        # Get robot name or generate a simple ID
+        self.robot_name = robot.getName() or f"EPuck_{id(robot) % 1000}"
         
         # Initialize emitter
         try:
@@ -72,87 +74,66 @@ class RobotCommunicator:
         # Last broadcast time
         self.last_broadcast_time = 0
         
-        # CSV communication log
-        self.csv_file = "communications.csv"
-        self.init_csv_log()
-        
         # Track last cat detection time for cooperative detection
         self.last_cat_detection_time = 0
         
         # Known detections from all robots
         self.all_detections = {}
         
-    def init_csv_log(self):
-        """Initialize CSV log file with header"""
-        # Create logs directory if it doesn't exist
-        logs_dir = "simulation_logs"
-        os.makedirs(logs_dir, exist_ok=True)
+        # Track detections and their order
+        self.detections_log = "robot_detections.csv"
+        self.known_detections = {}  # Format: {object_type: [robot_names_in_order]}
         
-        # Create a new CSV file with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.csv_file = f"{logs_dir}/communications_{timestamp}.csv"
+        # Initialize CSV file
+        self.init_csv_file()
         
-        with open(self.csv_file, 'w', newline='') as f:
-            f.write("="*80 + "\n")
-            f.write(f"SIMULATION RUN - Started at {timestamp}\n")
-            f.write("="*80 + "\n")
-            writer = csv.writer(f)
-            writer.writerow([
-                "Timestamp",
-                "Simulation_Time",
-                "Event_Type",
-                "Sender_Robot",
-                "Receiver_Robot",
-                "Message_Type",
-                "Details",
-                "Location_X",
-                "Location_Y"
-            ])
-            f.write("-"*80 + "\n")
-        print(f"Communication log initialized: {self.csv_file}")
+    def init_csv_file(self):
+        """Create CSV file with updated headers"""
+        if not os.path.exists(self.detections_log):
+            with open(self.detections_log, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['Time', 'Robot', 'Object', 'Detection_Order', 'Position', 'First_Detector'])
             
     def log_message(self, message, receiver_id="broadcast"):
         """Log message to CSV file with improved formatting"""
+        pass  # Removed CSV logging functionality
+        
+    def log_detection(self, object_type, position):
+        """Log detection with order and ancestor tracking"""
         try:
-            with open(self.csv_file, 'a', newline='') as f:
+            # Skip logging obstacles
+            if (object_type == "Obstacle"):
+                return False
+
+            if object_type not in self.known_detections:
+                self.known_detections[object_type] = []
+                
+            # Check if this robot already detected this object
+            if self.robot_name not in self.known_detections[object_type]:
+                self.known_detections[object_type].append(self.robot_name)
+                detection_order = len(self.known_detections[object_type])
+                first_detector = self.known_detections[object_type][0] if detection_order > 1 else "None"
+            else:
+                detection_order = "Repeat"
+                first_detector = self.known_detections[object_type][0]
+                
+            # Log to CSV
+            with open(self.detections_log, 'a', newline='') as f:
                 writer = csv.writer(f)
-                
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                sim_time = f"{self.robot.getTime():.2f}"
-                event_type = "SEND" if receiver_id == "broadcast" else "RECEIVE"
-                sender = message.get("robot_id", "unknown")
-                msg_type = message.get("type", "unknown")
-                
-                # Format details based on message type
-                if msg_type == "detection":
-                    details = f"Detected: {message['detection']['object_type']}, Confidence: {message['detection']['confidence']:.2f}"
-                    loc = message['detection'].get('location', {})
-                    x = loc.get('x', '')
-                    y = loc.get('y', '')
-                elif msg_type == "command":
-                    cmd = message['command']
-                    details = f"Command: {cmd['action']}, Params: {json.dumps(cmd.get('params', {}))}"
-                    x = y = ''
-                else:
-                    details = json.dumps(message.get('position', {}))
-                    pos = message.get('position', {})
-                    x = pos.get('x', '')
-                    y = pos.get('y', '')
-                
                 writer.writerow([
-                    timestamp,
-                    sim_time,
-                    event_type,
-                    sender,
-                    receiver_id,
-                    msg_type,
-                    details,
-                    x,
-                    y
+                    datetime.now().strftime("%H:%M:%S"),
+                    self.robot_name,
+                    object_type,
+                    detection_order,
+                    f"({position[0]:.2f}, {position[1]:.2f})",
+                    first_detector if detection_order == "Repeat" else "First"
                 ])
                 
+            return detection_order == 1
+
         except Exception as e:
-            print(f"Failed to log message to CSV: {e}")
+            print(f"Failed to log detection: {e}")
+            return False
         
     def broadcast_position(self, x, y, heading=0.0, status="exploring"):
         """
@@ -197,49 +178,31 @@ class RobotCommunicator:
             print(f"Failed to broadcast position: {e}")
             return False
     
-    def broadcast_detection(self, detection_type, confidence, location=None):
-        """
-        Broadcast a detection event to other robots.
-        
-        Args:
-            detection_type: Type of detected object (e.g., "Cat", "CardboardBox")
-            confidence: Detection confidence (0.0-1.0)
-            location: Optional dictionary with x, y coordinates
-        
-        Returns:
-            True if broadcast successful, False otherwise
-        """
-        if not self.emitter:
-            return False
-            
+    def broadcast_detection(self, detection_type, confidence, position):
+        """Broadcast detection to other robots"""
         try:
-            # Create message
+            # Ensure position is properly formatted
+            location = {
+                "x": float(position[0]) if isinstance(position, (list, tuple)) else float(position["x"]),
+                "y": float(position[1]) if isinstance(position, (list, tuple)) else float(position["y"])
+            }
+
             message = {
+                "from": self.robot_name,
                 "type": "detection",
-                "robot_id": self.robot_id,
-                "detection": {
-                    "object_type": detection_type,
-                    "confidence": float(confidence)
-                },
+                "object": detection_type,
+                "confidence": float(confidence),
+                "location": location,
                 "timestamp": self.robot.getTime()
             }
-            
-            # Add location if provided
-            if location:
-                message["detection"]["location"] = location
+
+            if self.emitter:
+                self.emitter.send(json.dumps(message).encode('utf-8'))
                 
-            # Convert to JSON and send
-            json_message = json.dumps(message)
-            self.emitter.send(json_message.encode('utf-8'))
-            
-            # Log the message
-            self.log_message(message)
-            
-            # For Cat detections, update the cooperative detection time
-            if detection_type == "Cat":
-                self.last_cat_detection_time = self.robot.getTime()
-            
-            return True
+            # Log detection
+            detection_order = self.log_detection(detection_type, (location["x"], location["y"]))
+            return detection_order == 1  # Return True if first detection
+                
         except Exception as e:
             print(f"Failed to broadcast detection: {e}")
             return False
@@ -355,6 +318,30 @@ class RobotCommunicator:
                 self.receiver.nextPacket()  # Skip the problematic message
         
         return new_messages
+    
+    def check_messages(self):
+        """Process incoming messages from other robots"""
+        if not self.receiver:
+            return []
+            
+        messages = []
+        while self.receiver.getQueueLength() > 0:
+            try:
+                message = json.loads(self.receiver.getString())
+                if message.get("from", "") != self.robot_name:  # Safe get for "from" field
+                    if message.get("type") == "detection":  # Safe get for "type" field
+                        object_type = message.get("object")
+                        if object_type and object_type != "Obstacle":  # Only process non-obstacle detections
+                            if object_type not in self.known_detections:
+                                self.known_detections[object_type] = []
+                            if message["from"] not in self.known_detections[object_type]:
+                                self.known_detections[object_type].append(message["from"])
+                            messages.append(message)
+            except Exception as e:
+                print(f"Error processing message: {e}")
+            finally:
+                self.receiver.nextPacket()
+        return messages
     
     def get_nearby_robots(self, max_distance=None):
         """

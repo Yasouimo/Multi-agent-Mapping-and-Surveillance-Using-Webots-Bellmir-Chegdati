@@ -87,36 +87,36 @@ def get_state(sensor_values):
 
 # Handle messages from other robots
 def handle_robot_messages(messages):
-    global robot_x, robot_y, epsilon, Q_table
+    global robot_x, robot_y, epsilon
     
     if not messages:
         return
         
     for message in messages:
         if message["type"] == "detection":
-            detection = message["detection"]
-            robot_id = message["robot_id"]
+            object_type = message["object"]
+            confidence = message["confidence"]
+            location = message.get("location", {})
+            robot_id = message["from"]
             
-            # Process all detections whether alarm is activated or not
-            print(f"Robot {robot_id} detected a {detection['object_type']} with confidence {detection['confidence']:.2f}")
+            print(f"Robot {robot_id} detected a {object_type} with confidence {confidence:.2f}")
             
             # If this is a cat detection with high confidence
-            if detection["object_type"] == "Cat" and detection["confidence"] > 0.5:
+            if object_type == "Cat" and confidence > 0.5:
                 if not communicator.alarm_activated:
                     print(f"🚨 Alarm activated by Robot {robot_id}'s cat detection!")
                     communicator.alarm_activated = True
                     communicator.first_detector = robot_id
                     robot_status = "detected_object"
                 
-                if "location" in detection:
-                    # Get direction to the cat
-                    cat_x = detection["location"]["x"]
-                    cat_y = detection["location"]["y"]
+                # Only process location if it exists
+                if location and "x" in location and "y" in location:
+                    cat_x = location["x"]
+                    cat_y = location["y"]
                     
                     # Make this area more attractive in our Q-table
-                    # For simplicity, we just decrease epsilon to be more exploitative
-                    print(f"🐱 Cat detected by another robot! Location: ({cat_x:.2f}, {cat_y:.2f})")
-                    epsilon = max(min_epsilon, epsilon * 0.8)  # Become more exploitative
+                    print(f"🐱 Cat detected at location: ({cat_x:.2f}, {cat_y:.2f})")
+                    epsilon = max(min_epsilon, epsilon * 0.8)
                     
                     # Calculate direction from robot to cat
                     dx = cat_x - robot_x

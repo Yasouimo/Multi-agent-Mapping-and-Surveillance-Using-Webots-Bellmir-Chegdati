@@ -180,6 +180,22 @@ class ObjectDetector:
                                 if cls_name in self.alarm_classes:
                                     alarm_triggered = True
                                     print(f"Alarm class detected: {cls_name}")
+                                    
+                                # Broadcast detection through communicator
+                                if self.communicator:
+                                    try:
+                                        position = {"x": float(self.robot_position[0]), "y": float(self.robot_position[1])}
+                                        is_first = self.communicator.broadcast_detection(
+                                            cls_name,
+                                            confidence,
+                                            position
+                                        )
+                                        
+                                        # Special handling for Cat detections
+                                        if cls_name == "Cat" and is_first:
+                                            return True  # Trigger alarm
+                                    except Exception as e:
+                                        print(f"Failed to broadcast detection: {e}")
                         except Exception as box_err:
                             print(f"Error processing detection box: {box_err}")
 
@@ -217,6 +233,23 @@ class ObjectDetector:
                 alarm_should_trigger = True
                 
         return alarm_should_trigger  # Return True if we detected a cat
+
+    def broadcast_detection(self, cls_name, confidence, position):
+        """Send detection through communicator"""
+        if self.communicator:
+            try:
+                pos_dict = {
+                    "x": float(position[0]),
+                    "y": float(position[1])
+                }
+                return self.communicator.broadcast_detection(
+                    cls_name,
+                    confidence,
+                    pos_dict
+                )
+            except Exception as e:
+                print(f"Failed to broadcast detection: {e}")
+        return False
 
     def update(self, step_count, robot_x=None, robot_y=None):
         if robot_x is not None and robot_y is not None:
