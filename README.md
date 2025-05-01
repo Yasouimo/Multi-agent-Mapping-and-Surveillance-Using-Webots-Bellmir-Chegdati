@@ -40,6 +40,7 @@ The e-Puck robots utilize a sophisticated communication system to share informat
 ### Communication Architecture
 
 Each e-Puck robot is equipped with an emitter and receiver device that allows for bidirectional communication with other robots in the team. The `RobotCommunicator` class manages this communication, handling tasks such as:
+
 * Broadcasting robot positions and statuses
 * Sharing object detections across the team
 * Logging detection information for analysis
@@ -55,10 +56,14 @@ When a robot detects an object in the environment, it broadcasts this informatio
 
 Here's an example from our detection logs showing how different robots detect and share information about various objects:
 
-14:21:50,e-puck,PlasticCrate,1,"(0.09, -0.34)",First       # First detection of a PlasticCrate
-14:22:28,e-puck(1),CardboardBox,1,"(0.90, -0.04)",First    # First detection of a CardboardBox
-14:23:42,e-puck(3),OilBarrel,1,"(3.34, 4.11)",First        # First detection of an OilBarrel
-14:24:21,e-puck(3),Cat,1,"(4.74, 1.57)",First              # First detection of a Cat - triggers alarm
+```
+| Timestamp | Robot     | Object        | ID | Position        | Status | Notes                       |
+|-----------|-----------|---------------|----|-----------------|---------|-----------------------------|
+| 14:21:50  | e-puck    | PlasticCrate  | 1  | (0.09, -0.34)   | First  | First detection of a crate  |
+| 14:22:28  | e-puck(1) | CardboardBox  | 1  | (0.90, -0.04)   | First  | First detection of a box    |
+| 14:23:42  | e-puck(3) | OilBarrel     | 1  | (3.34, 4.11)    | First  | First detection of a barrel |
+| 14:24:21  | e-puck(3) | Cat           | 1  | (4.74, 1.57)    | First  | First cat - triggers alarm  |
+```
 
 ### Intelligent Alarm System
 
@@ -70,14 +75,22 @@ The robot team implements a cooperative alarm system that prevents multiple aler
 
 For example, at 14:24:21, e-puck(3) first detected a cat at position (4.74, 1.57), triggering an alarm. Subsequent cat detections by the same robot don't trigger new alarms, as shown by the "Repeat" status:
 
-14:24:21,e-puck(3),Cat,1,"(4.74, 1.57)",First      # Initial detection - triggers alarm
-14:24:25,e-puck(3),Cat,Repeat,"(4.70, 0.93)",e-puck(3)
-14:24:30,e-puck(3),Cat,Repeat,"(4.51, -0.07)",e-puck(3)
-14:24:35,e-puck(3),Cat,Repeat,"(4.00, -0.95)",e-puck(3)
+```
+| Timestamp | Robot     | Object | Status | Position         | Detected By  |
+|-----------|-----------|--------|--------|------------------|--------------|
+| 14:24:21  | e-puck(3) | Cat    | First  | (4.74, 1.57)     | -            | # Initial detection - triggers alarm
+| 14:24:25  | e-puck(3) | Cat    | Repeat | (4.70, 0.93)     | e-puck(3)    |
+| 14:24:30  | e-puck(3) | Cat    | Repeat | (4.51, -0.07)    | e-puck(3)    |
+| 14:24:35  | e-puck(3) | Cat    | Repeat | (4.00, -0.95)    | e-puck(3)    |
+```
 
 When another robot (e-puck(1)) detected a cat at 14:27:15, it created a new first detection, as it was detecting the cat in a different area of the environment:
 
-14:27:15,e-puck(1),Cat,1,"(-2.53, 4.02)",First    # New cat detected by a different robot
+```
+| Timestamp | Robot     | Object | ID | Position        | Status | Notes                      |
+|-----------|-----------|--------|----|-----------------|---------|-----------------------------|
+| 14:27:15  | e-puck(1) | Cat    | 1  | (-2.53, 4.02)   | First  | New cat detected by different robot |
+```
 
 ## Object Detection and Alert System
 
