@@ -9,34 +9,7 @@ This project explores the collaborative capabilities of **e-Puck robots** in map
 
 ## Project Strucutre
 
-multi-agent-mapping-and-surveillance-using-webots/
-│
-├── 📄 README.md                 - Main project documentation
-├── 📄 requirements.txt          - Python dependencies
-│
-├── 🤖 controllers/
-│   └── e-puck_controller/
-│       ├── 📄 e-puck_controller.py  - Main robot control logic
-│       ├── 📄 detection.py          - Object detection handling
-│       ├── 📄 robot_communication.py - Inter-robot communication
-│       ├── 📦 best.pt              - Pretrained YOLOv5 weights
-│       ├── 📊 robot_detections.csv - Detection log history
-│       └── 📂 detections/          - Archived detections
-│           ├── 🖼️ 20250429_183943_PlasticCrate_0.97.jpg
-│           ├── 🖼️ 20250429_184021_Cat_0.82.jpg
-│           └── 🖼️ 20250501_135744_OilBarrel_0.88.jpg
-│
-├── 🔬 Notebook/
-│   ├── 📓 Webots_Yolo_Bellmir_Chegdati.ipynb  - Jupyter notebook
-│   └── 📂 data/
-│       ├── 📄 data.yaml         - YOLO dataset config
-│       └── 📂 train/
-│           ├── 📂 images/       - Training images (50+)
-│           └── 📂 labels/       - YOLO annotation files
-│
-└── 📚 docs/
-    ├── 🖼️ project_world.png     - Simulation environment
-    └── 🖼️ robot_workflow.png   - System architecture         
+![Project Structure](docs/Project Structure.png)         
 
 
 ## Workflow of the Team
