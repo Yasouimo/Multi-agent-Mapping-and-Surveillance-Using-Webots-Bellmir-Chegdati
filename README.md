@@ -7,6 +7,32 @@
 
 This project explores the collaborative capabilities of **e-Puck robots** in map parsing and surveillance. Utilizing the **Webots** simulation environment, the **e-Puck** robots are programmed to work **cooperatively** to map a maze environment and perform surveillance tasks. The robots use **Q-learning** to navigate through the maze while avoiding **obstacles** and cover the entire map. Additionally, they utilize **YOLOv8** for object detection - if a **cat** is detected, an **alarm** is activated signifying the presence of a stray object that should not be in the monitored area.
 
+## Project Strucutre
+
+📁 yasouimo-multi-agent-mapping-and-surveillance-using-webots-bellmir-chegdati  
+├── 📄 README.md  
+├── 📄 requirements.txt  
+├── 📁 controllers/  
+│   └── 📁 e-puck_controller/  
+│       ├── e-puck_controller.py  
+│       ├── detection.py  
+│       ├── robot_communication.py  
+│       ├── best.pt  
+│       ├── robot_detections.csv 
+│       └── 📁detections
+│           ├──20250429_183943_PlasticCrate_0.97
+│           ├──20250429_184021_Cat_0.82
+│           ├──20250501_135744_OilBarrel_0.88
+├── 📁 Notebook/  
+│   ├── Webots_Yolo_Bellmir_Chegdati.ipynb  
+│   └── 📁 data/  
+│       ├── data.yaml  
+│       ├── train/  
+│       │   ├── images/  📷 ~50+ images  
+│       │   └── labels/  🏷️ ~50+ label files  
+├── 📁 docs/  
+
+
 ## Workflow of the Team
 
 In this experiment, each e-Puck robot reads observations through proximity sensors and cameras. The robots continuously update their maps and metadata based on these observations. To ensure effective and coordinated operation, all robots share this information with their peer robots.
