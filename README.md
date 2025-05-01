@@ -9,7 +9,7 @@ This project explores the collaborative capabilities of **e-Puck robots** in map
 
 ## Project Strucutre
 
-![Project Structure](docs/Project Structure.png)         
+![Project Structure](docs/Project_Structure.png)         
 
 
 ## Workflow of the Team
