@@ -9,34 +9,34 @@ This project explores the collaborative capabilities of **e-Puck robots** in map
 
 ## Project Strucutre
 
-yasouimo-multi-agent-mapping-and-surveillance-using-webots-bellmir-chegdati/
+multi-agent-mapping-and-surveillance-using-webots/
 │
-├── README.md                    # Project documentation and setup guide
-├── requirements.txt             # Python package dependencies
+├── 📄 README.md                 - Main project documentation
+├── 📄 requirements.txt          - Python dependencies
 │
-├── controllers/                 # Robot control implementations
-│   └── e-puck_controller/       # Main controller package
-│       ├── e-puck_controller.py # Core robot behavior and movement logic
-│       ├── detection.py         # Object detection processing
-│       ├── robot_communication.py # Multi-agent communication protocol
-│       ├── best.pt              # Pretrained YOLOv5 model weights
-│       ├── robot_detections.csv # CSV log of all detections
-│       └── detections/          # Visual detection archives
-│           ├── 20250429_183943_PlasticCrate_0.97.jpg
-│           ├── 20250429_184021_Cat_0.82.jpg
-│           └── 20250501_135744_OilBarrel_0.88.jpg
+├── 🤖 controllers/
+│   └── e-puck_controller/
+│       ├── 📄 e-puck_controller.py  - Main robot control logic
+│       ├── 📄 detection.py          - Object detection handling
+│       ├── 📄 robot_communication.py - Inter-robot communication
+│       ├── 📦 best.pt              - Pretrained YOLOv5 weights
+│       ├── 📊 robot_detections.csv - Detection log history
+│       └── 📂 detections/          - Archived detections
+│           ├── 🖼️ 20250429_183943_PlasticCrate_0.97.jpg
+│           ├── 🖼️ 20250429_184021_Cat_0.82.jpg
+│           └── 🖼️ 20250501_135744_OilBarrel_0.88.jpg
 │
-├── Notebook/                    # Development and training resources
-│   ├── Webots_Yolo_Bellmir_Chegdati.ipynb # Jupyter notebook
-│   └── data/                    # YOLO training dataset
-│       ├── data.yaml            # Dataset configuration
-│       └── train/              # Training data
-│           ├── images/          # 50+ training images
-│           └── labels/          # YOLO annotation files
+├── 🔬 Notebook/
+│   ├── 📓 Webots_Yolo_Bellmir_Chegdati.ipynb  - Jupyter notebook
+│   └── 📂 data/
+│       ├── 📄 data.yaml         - YOLO dataset config
+│       └── 📂 train/
+│           ├── 📂 images/       - Training images (50+)
+│           └── 📂 labels/       - YOLO annotation files
 │
-└── docs/                        # Project documentation
-    ├── project_world.png          
-    └── robot_workflow.png         
+└── 📚 docs/
+    ├── 🖼️ project_world.png     - Simulation environment
+    └── 🖼️ robot_workflow.png   - System architecture         
 
 
 ## Workflow of the Team
