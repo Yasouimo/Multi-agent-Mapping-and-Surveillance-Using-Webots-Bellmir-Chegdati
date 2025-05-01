@@ -1,3 +1,2 @@
 .DS_Store
-controllers/e-puck_controller/__pycache__/detection.cpython-311.pyc
-controllers/e-puck_controller/__pycache__/robot_communication.cpython-311.pyc
+controllers/e-puck_controller/__pycache__
