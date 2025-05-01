@@ -7,6 +7,38 @@
 
 This project explores the collaborative capabilities of **e-Puck robots** in map parsing and surveillance. Utilizing the **Webots** simulation environment, the **e-Puck** robots are programmed to work **cooperatively** to map a maze environment and perform surveillance tasks. The robots use **Q-learning** to navigate through the maze while avoiding **obstacles** and cover the entire map. Additionally, they utilize **YOLOv8** for object detection - if a **cat** is detected, an **alarm** is activated signifying the presence of a stray object that should not be in the monitored area.
 
+## Project Strucutre
+
+multi-agent-mapping-and-surveillance-using-webots/
+│
+├── 📄 README.md                 - Main project documentation
+├── 📄 requirements.txt          - Python dependencies
+│
+├── 🤖 controllers/
+│   └── e-puck_controller/
+│       ├── 📄 e-puck_controller.py  - Main robot control logic
+│       ├── 📄 detection.py          - Object detection handling
+│       ├── 📄 robot_communication.py - Inter-robot communication
+│       ├── 📦 best.pt              - Pretrained YOLOv5 weights
+│       ├── 📊 robot_detections.csv - Detection log history
+│       └── 📂 detections/          - Archived detections
+│           ├── 🖼️ 20250429_183943_PlasticCrate_0.97.jpg
+│           ├── 🖼️ 20250429_184021_Cat_0.82.jpg
+│           └── 🖼️ 20250501_135744_OilBarrel_0.88.jpg
+│
+├── 🔬 Notebook/
+│   ├── 📓 Webots_Yolo_Bellmir_Chegdati.ipynb  - Jupyter notebook
+│   └── 📂 data/
+│       ├── 📄 data.yaml         - YOLO dataset config
+│       └── 📂 train/
+│           ├── 📂 images/       - Training images (50+)
+│           └── 📂 labels/       - YOLO annotation files
+│
+└── 📚 docs/
+    ├── 🖼️ project_world.png     - Simulation environment
+    └── 🖼️ robot_workflow.png   - System architecture         
+
+
 ## Workflow of the Team
 
 In this experiment, each e-Puck robot reads observations through proximity sensors and cameras. The robots continuously update their maps and metadata based on these observations. To ensure effective and coordinated operation, all robots share this information with their peer robots.
