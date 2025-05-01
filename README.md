@@ -9,7 +9,7 @@ This project explores the collaborative capabilities of **e-Puck robots** in map
 
 ## Project Strucutre
 
-![Project Structure](docs/Project Structure.png)         
+![Project Structure](docs/Project_Structure.png)         
 
 
 ## Workflow of the Team
@@ -32,6 +32,65 @@ Each robot in the team performs a series of steps to ensure effective map parsin
 ![Robot Workflow](docs/robot_workflow.jpg)
 
 The diagram above illustrates the detailed workflow of the robots, showing the processes of sending and receiving map updates, path planning, and path execution.
+
+## Inter-Robot Communication System
+
+The e-Puck robots utilize a sophisticated communication system to share information and coordinate their activities across the environment. This system enables efficient mapping and surveillance by allowing robots to exchange detection data and avoid redundant exploration.
+
+### Communication Architecture
+
+Each e-Puck robot is equipped with an emitter and receiver device that allows for bidirectional communication with other robots in the team. The `RobotCommunicator` class manages this communication, handling tasks such as:
+
+* Broadcasting robot positions and statuses
+* Sharing object detections across the team
+* Logging detection information for analysis
+* Coordinating responses to important detections (like intruders)
+
+### Object Detection Sharing
+
+When a robot detects an object in the environment, it broadcasts this information to all other robots in the network. This approach has several benefits:
+
+1. **Reduced Redundancy**: Robots avoid re-exploring areas that have already been mapped by their peers
+2. **Collaborative Intelligence**: The system tracks which robot first detected each object type
+3. **Prioritized Alerts**: Critical detections (such as cats) trigger immediate alerts
+
+Here's an example from our detection logs showing how different robots detect and share information about various objects:
+
+```
+| Timestamp | Robot     | Object        | ID | Position        | Status | Notes                       |
+|-----------|-----------|---------------|----|-----------------|---------|-----------------------------|
+| 14:21:50  | e-puck    | PlasticCrate  | 1  | (0.09, -0.34)   | First  | First detection of a crate  |
+| 14:22:28  | e-puck(1) | CardboardBox  | 1  | (0.90, -0.04)   | First  | First detection of a box    |
+| 14:23:42  | e-puck(3) | OilBarrel     | 1  | (3.34, 4.11)    | First  | First detection of a barrel |
+| 14:24:21  | e-puck(3) | Cat           | 1  | (4.74, 1.57)    | First  | First cat - triggers alarm  |
+```
+
+### Intelligent Alarm System
+
+The robot team implements a cooperative alarm system that prevents multiple alerts for the same object. When a robot detects a cat (unauthorized entity), it:
+
+1. Broadcasts the detection to all robots
+2. Checks if another robot has recently detected a cat (within 60 seconds)
+3. Only triggers an alarm if this is a new detection
+
+For example, at 14:24:21, e-puck(3) first detected a cat at position (4.74, 1.57), triggering an alarm. Subsequent cat detections by the same robot don't trigger new alarms, as shown by the "Repeat" status:
+
+```
+| Timestamp | Robot     | Object | Status | Position         | Detected By  |
+|-----------|-----------|--------|--------|------------------|--------------|
+| 14:24:21  | e-puck(3) | Cat    | First  | (4.74, 1.57)     | -            | # Initial detection - triggers alarm
+| 14:24:25  | e-puck(3) | Cat    | Repeat | (4.70, 0.93)     | e-puck(3)    |
+| 14:24:30  | e-puck(3) | Cat    | Repeat | (4.51, -0.07)    | e-puck(3)    |
+| 14:24:35  | e-puck(3) | Cat    | Repeat | (4.00, -0.95)    | e-puck(3)    |
+```
+
+When another robot (e-puck(1)) detected a cat at 14:27:15, it created a new first detection, as it was detecting the cat in a different area of the environment:
+
+```
+| Timestamp | Robot     | Object | ID | Position        | Status | Notes                      |
+|-----------|-----------|--------|----|-----------------|---------|-----------------------------|
+| 14:27:15  | e-puck(1) | Cat    | 1  | (-2.53, 4.02)   | First  | New cat detected by different robot |
+```
 
 ## Object Detection and Alert System
 
