@@ -14,7 +14,7 @@ This project explores the collaborative capabilities of **e-Puck robots** in map
 
 ## Workflow of the Team
 
-In this experiment, each e-Puck robot reads observations through proximity sensors and cameras. The robots continuously update their maps and metadata based on these observations. To ensure effective and coordinated operation, all robots share this information with their peer robots.
+In this experiment, each **e-Puck** robot reads observations through proximity sensors and cameras. The robots continuously update their maps and metadata based on these observations. To ensure effective and coordinated operation, all robots share this information with their peer robots.
 
 ![Team Workflow](docs/team_workflow.jpg)
 
