@@ -32,6 +32,7 @@ Each robot in the team follows a structured sequence of operations to ensure acc
 
 4. **Path Execution**: Robots execute their planned paths while continuously adapting to dynamic changes in the environment by responding to real-time sensor inputs.
 
+5. **Visual Detection and Alert**: Each robot utilizes a YOLO-based object detection model to identify specific targets or anomalies during its mission. Upon detecting a relevant object or threat, the robot triggers an audible alert using its onboard speaker to notify surrounding agents or human operators.
 
 ![Robot Workflow](docs/robot_workflow.jpg)
 
