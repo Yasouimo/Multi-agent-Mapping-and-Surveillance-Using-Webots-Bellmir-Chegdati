@@ -22,12 +22,16 @@ The diagram above illustrates the workflow of the team, highlighting the process
 
 ## Robot Workflow
 
-Each robot in the team performs a series of steps to ensure effective map parsing and surveillance. The primary tasks performed by each robot are as follows:
+Each robot in the team follows a structured sequence of operations to ensure accurate map interpretation and effective area surveillance. The key tasks performed by each robot are outlined below:
 
-1. **Send Map Updates**: Robots calculate updates based on their sensor data and send these updates to their peers.
-2. **Receive Map Updates**: Robots receive updates from their peers and integrate this information into their own maps.
-3. **Path Planning**: Robots plan their paths based on the updated maps and the positions of their peers to avoid obstacles and cover the area efficiently.
-4. **Path Execution**: Robots execute the planned paths, adjusting their movements based on real-time sensor data.
+1. **Send Map Updates**: Each robot processes data from its sensors to compute map changes and promptly shares these updates with its teammates.
+
+2. **Receive Map Updates**: Robots receive shared updates from peer robots and merge the incoming data into their own local maps to maintain a consistent and up-to-date understanding of the environment.
+
+3. **Path Planning**: Using the latest map information and the known positions of teammates, each robot computes an optimal path that avoids obstacles and ensures efficient area coverage with minimal redundancy.
+
+4. **Path Execution**: Robots execute their planned paths while continuously adapting to dynamic changes in the environment by responding to real-time sensor inputs.
+
 
 ![Robot Workflow](docs/robot_workflow.jpg)
 
