@@ -1,11 +1,11 @@
-# Multi Agent Mapping and Surveillance with e-Puck Webots Robots
+# Cooperative Multi Agent Mapping and Surveillance with e-Puck Webots Robots
 
 ![Project Overview](docs/project_world.png)
 
 
 ## Introduction
 
-This project explores the collaborative capabilities of **e-Puck robots** in map parsing and surveillance. Utilizing the **Webots** simulation environment, the **e-Puck** robots are programmed to work **cooperatively** to map a maze environment and perform surveillance tasks. The robots use **Q-learning** to navigate through the maze while avoiding **obstacles** and cover the entire map. Additionally, they utilize **YOLOv8** for object detection - if a **cat** is detected, an **alarm** is activated signifying the presence of a stray object that should not be in the monitored area.
+This project explores the **collaborative** capabilities of **e-Puck robots** in **map parsing** and **surveillance**. Utilizing the **Webots** simulation environment, the **e-Puck** robots are programmed to work **cooperatively** to map a maze environment and perform surveillance tasks. The robots use **Q-learning** to navigate through the maze while avoiding **obstacles** and cover the entire map. Additionally, they utilize **YOLOv8** for object detection - if a **cat** is detected, an **alarm** is activated signifying the presence of a stray object that should not be in the monitored area.
 
 ## Project Strucutre
 
@@ -14,7 +14,7 @@ This project explores the collaborative capabilities of **e-Puck robots** in map
 
 ## Workflow of the Team
 
-In this experiment, each e-Puck robot reads observations through proximity sensors and cameras. The robots continuously update their maps and metadata based on these observations. To ensure effective and coordinated operation, all robots share this information with their peer robots.
+In this experiment, each **e-Puck** robot collects environmental data using its onboard proximity sensors and cameras. These observations are used to continuously update the robot’s internal map and metadata. To promote efficient collaboration and situational awareness, all robots actively share their updated data with their peers. This real-time exchange of sensory information and map updates enables the robots to operate in a synchronized and informed manner, improving the overall performance of the multi-robot system.
 
 ![Team Workflow](docs/team_workflow.jpg)
 
