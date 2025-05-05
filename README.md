@@ -14,6 +14,7 @@
 - [Object Detection and Alert System](#object-detection-and-alert-system)
   - [Process Overview](#process-overview)
   - [Model Performance Metrics](#model-performance-metrics)
+- [Installation](#installation)
   
 
 ## Introduction
