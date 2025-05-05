@@ -6,6 +6,7 @@
 - [Introduction](#introduction)
 - [Project Structure](#project-strucutre)
 - [Workflow of the Team](#workflow-of-the-team)
+- [Robot Workflow](#robot-workflow)
   
 
 ## Introduction
