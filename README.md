@@ -2,6 +2,8 @@
 
 ![Project Overview](docs/project_world.png)
 
+## Table of Contents
+
 
 ## Introduction
 
