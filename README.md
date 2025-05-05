@@ -11,6 +11,9 @@
   - [Communication Architecture](#communication-architecture)
   - [Object Detection Sharing](#object-detection-sharing)
   - [Intelligent Alarm System](#intelligent-alarm-system)
+- [Object Detection and Alert System](#object-detection-and-alert-system)
+  - [Process Overview](#process-overview)
+  - [Model Performance Metrics](#model-performance-metrics)
   
 
 ## Introduction
