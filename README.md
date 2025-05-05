@@ -5,7 +5,8 @@
 ## Table of Contents
 - [Introduction](#introduction)
 - [Project Structure](#project-strucutre)
-
+- [Workflow of the Team](#workflow-of-the-team)
+  
 
 ## Introduction
 
