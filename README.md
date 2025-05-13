@@ -54,7 +54,7 @@ The diagram above illustrates the detailed workflow of the robots, showing the p
 
 ## Inter-Robot Communication System
 
-The e-Puck robots utilize a sophisticated communication system to share information and coordinate their activities across the environment. This system enables efficient mapping and surveillance by allowing robots to exchange detection data and avoid redundant exploration.
+The e-Puck robots utilize a sophisticated communication system to share information and coordinate their activities across the environment. This system enables efficient mapping and surveillance by allowing robots to exchange detection data and avoid redundant exploration. 
 
 ### Communication Architecture
 
