@@ -248,75 +248,81 @@ class RobotCommunicator:
             print(f"Failed to broadcast command: {e}")
             return False
     
-    def check_for_messages(self):
-        """
-        Check for and process any received messages.
+    def broadcast_map_update(self, map_data, robot_x, robot_y):
+        """Broadcast map updates to other robots"""
+        # Convert tuple keys to string representation
+        serializable_map = {f"{x},{y}": value for (x, y), value in map_data.items()}
         
-        Returns:
-            List of new messages received
-        """
+        message = {
+            "type": "map_update",
+            "robot_id": self.robot_id,
+            "map_data": serializable_map,
+            "position": {
+                "x": robot_x,
+                "y": robot_y
+            },
+            "timestamp": self.robot.getTime()
+        }
+        
+        if self.emitter:
+            self.emitter.send(json.dumps(message).encode('utf-8'))
+            return True
+        return False
+
+    def broadcast_planned_path(self, path, robot_x, robot_y):
+        """Broadcast planned path to other robots"""
+        message = {
+            "type": "planned_path",
+            "robot_id": self.robot_id,
+            "path": path,
+            "position": {
+                "x": robot_x,
+                "y": robot_y
+            },
+            "timestamp": self.robot.getTime()
+        }
+        
+        if self.emitter:
+            self.emitter.send(json.dumps(message).encode('utf-8'))
+            return True
+        return False
+    
+    def check_for_messages(self):
+        """Check for and process any received messages."""
         if not self.receiver:
             return []
             
         new_messages = []
+        current_time = self.robot.getTime()
         
-        # Process all available messages
         while self.receiver.getQueueLength() > 0:
             try:
-                # Get the message as string - Using getString instead of getData
                 message_string = self.receiver.getString()
-                
-                # Parse the JSON message (no need to decode as getString returns a string)
                 message = json.loads(message_string)
                 
-                # Skip our own messages
-                if message.get("robot_id") == self.robot_id:
-                    self.receiver.nextPacket()
-                    continue
-                    
-                # Log the received message
-                self.log_message(message, receiver_id=self.robot_id)
-                
-                # Process different message types
-                if message["type"] == "position":
-                    # Update our knowledge of other robots' positions
-                    self.robot_positions[message["robot_id"]] = {
-                        "position": message["position"],
-                        "status": message["status"],
-                        "timestamp": message["timestamp"]
+                # Only process messages from other robots
+                robot_id = message.get("robot_id") or message.get("from")
+                if robot_id and robot_id != self.robot_id:
+                    # Update robot positions with timestamp
+                    self.robot_positions[robot_id] = {
+                        "position": message.get("position", {}),
+                        "status": message.get("status", "unknown"),
+                        "timestamp": current_time,
+                        "last_seen": current_time
                     }
-                
-                elif message["type"] == "detection":
-                    # Store the detection information
-                    robot_id = message["robot_id"]
-                    detection_type = message["detection"]["object_type"]
-                    confidence = message["detection"]["confidence"]
-                    timestamp = message["timestamp"]
-                    
-                    if robot_id not in self.all_detections:
-                        self.all_detections[robot_id] = []
-                        
-                    self.all_detections[robot_id].append({
-                        "type": detection_type,
-                        "confidence": confidence,
-                        "timestamp": timestamp,
-                        "location": message["detection"].get("location")
-                    })
-                    
-                    # If it's a cat detection, update the cooperative detection time
-                    if detection_type == "Cat":
-                        self.last_cat_detection_time = timestamp
-                
-                # Add to our list of new messages
-                new_messages.append(message)
-                
-                # Advance to the next packet
-                self.receiver.nextPacket()
+                    new_messages.append(message)
                 
             except Exception as e:
-                print(f"Error processing received message: {e}")
-                self.receiver.nextPacket()  # Skip the problematic message
-        
+                print(f"Message processing error: {str(e)}")
+            finally:
+                self.receiver.nextPacket()
+    
+        # Clean up old robot positions (older than 5 seconds)
+        self.robot_positions = {
+            rid: info for rid, info in self.robot_positions.items()
+            if (current_time - info.get("timestamp", 0)) < 5.0
+        }
+            
         return new_messages
     
     def check_messages(self):
@@ -346,12 +352,6 @@ class RobotCommunicator:
     def get_nearby_robots(self, max_distance=None):
         """
         Get a list of nearby robots based on their last known positions.
-        
-        Args:
-            max_distance: Maximum distance to consider (defaults to emitter range)
-            
-        Returns:
-            Dictionary of nearby robot IDs and their information
         """
         if max_distance is None:
             max_distance = self.max_range
@@ -362,24 +362,15 @@ class RobotCommunicator:
         # Filter for robots that are nearby and recently updated
         nearby_robots = {}
         for robot_id, info in self.robot_positions.items():
-            # Skip outdated positions (older than 30 seconds)
-            if current_time - info["timestamp"] > 30:
+            # Skip outdated positions (older than 5 seconds)
+            if current_time - info.get("timestamp", 0) > 5.0:
                 continue
                 
-            # Calculate distance (if we know our position)
-            # This requires the controller to provide our position
-            if "self_position" in self.__dict__:
-                x1, y1 = self.self_position["x"], self.self_position["y"]
-                x2, y2 = info["position"]["x"], info["position"]["y"]
-                distance = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-                
-                if distance <= max_distance:
-                    info["distance"] = distance
+            # Ensure position data exists and is properly formatted
+            if "position" in info and isinstance(info["position"], dict):
+                if "x" in info["position"] and "y" in info["position"]:
                     nearby_robots[robot_id] = info
-            else:
-                # If we don't know our position, include all robots
-                nearby_robots[robot_id] = info
-                
+
         return nearby_robots
     
     def should_trigger_alarm(self):

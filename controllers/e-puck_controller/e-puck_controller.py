@@ -4,6 +4,8 @@ import math
 import os
 import sys
 from robot_communication import RobotCommunicator
+from map_handler import MapHandler
+from map_visualizer import MapVisualizer
 
 # Initialize the robot
 robot = Robot()
@@ -22,9 +24,15 @@ right_motor = robot.getDevice("right wheel motor")
 left_motor.setPosition(float('inf'))
 right_motor.setPosition(float('inf'))
 
-# Initialize robot communicator
-communicator = RobotCommunicator(robot)
-print("Robot communication initialized")
+# Initialize robot communicator with broader range and automatic ID
+communicator = RobotCommunicator(robot, channel=1, max_range=20.0)  # Increase range to 20m
+robot_id = robot.getName()  # Get the robot's name from Webots
+print(f"Robot {robot_id} communication initialized")
+
+# Add this after communicator initialization
+# Force initial position broadcast
+communicator.broadcast_position(0, 0, 0, "initializing")
+robot.step(time_step)  # Give time for initial broadcast
 
 # Get distance sensors (8 sensors on e-puck)
 num_sensors = 8
@@ -67,6 +75,10 @@ try:
 except Exception as e:
     print(f"Could not initialize detector: {e}")
     detection_enabled = False
+
+# Initialize map handler
+map_handler = MapHandler(cell_size)  # Use same cell_size as before
+visualizer = MapVisualizer(cell_size)
 
 # Get basic state from sensors
 def get_state(sensor_values):
@@ -533,3 +545,61 @@ while robot.step(time_step) != -1:
                 obj_type = detection["type"]
                 conf = detection["confidence"]
                 print(f"  - Robot {robot_id}: {obj_type} ({conf:.2f})")
+    
+    # Update map based on sensor readings
+    for i, value in enumerate(sensor_values):
+        if value > OBSTACLE_THRESHOLD:
+            # Calculate obstacle position based on sensor angle
+            sensor_angle = (i * 2 * math.pi / num_sensors) + heading
+            obstacle_distance = value * 0.005  # Convert to meters
+            obstacle_x = robot_x + obstacle_distance * math.cos(sensor_angle)
+            obstacle_y = robot_y + obstacle_distance * math.sin(sensor_angle)
+            map_handler.update_map(obstacle_x, obstacle_y, True)
+        else:
+            # Mark empty space
+            sensor_angle = (i * 2 * math.pi / num_sensors) + heading
+            free_distance = 0.1  # 10cm of free space
+            free_x = robot_x + free_distance * math.cos(sensor_angle)
+            free_y = robot_y + free_distance * math.sin(sensor_angle)
+            map_handler.update_map(free_x, free_y, False)
+    
+    # Broadcast map updates periodically
+    if step_count % 50 == 0:
+        communicator.broadcast_map_update(map_handler.map, robot_x, robot_y)
+    
+    # Find path to unexplored area if not investigating something
+    if robot_status == "exploring" and step_count % 100 == 0:
+        path = map_handler.find_unexplored_frontier(robot_x, robot_y)
+        if path:
+            communicator.broadcast_planned_path(path, robot_x, robot_y)
+            print(f"Planning path to unexplored area: {len(path)} steps")
+    
+    # Update visualization
+    if step_count % 10 == 0:  # Update every 10 steps
+        visualizer.update_display(
+            robot_x, robot_y, heading,
+            map_handler.map,
+            planned_path=path if 'path' in locals() else None,
+            other_robots=communicator.get_nearby_robots(),
+            frontiers=map_handler.get_frontiers() if hasattr(map_handler, 'get_frontiers') else None,
+            robot_id=robot.getName()  # Pass the robot's name/ID
+        )
+        
+        # Save map periodically
+        if step_count % 500 == 0:
+            visualizer.save_map(f"map_{step_count}.png")
+    
+    # In the main loop where status is reported:
+    if step_count % 100 == 0:  # Every 100 steps
+        stats = map_handler.get_coordination_stats()
+        nearby_robots = communicator.get_nearby_robots()
+        
+        print("\n🤖 Multi-Agent Coordination Status:")
+        print(f"Robot {robot_id} Status Report:")
+        print(f"Maps shared: {stats['maps_received']}")
+        print(f"Cells shared: {stats['cells_shared']}")
+        print(f"Paths coordinated: {stats['paths_coordinated']}")
+        print("\nConnected Robots:")
+        for other_id, info in nearby_robots.items():
+            status = info.get('status', 'unknown')
+            print(f"  - Robot {other_id}: {status}")
