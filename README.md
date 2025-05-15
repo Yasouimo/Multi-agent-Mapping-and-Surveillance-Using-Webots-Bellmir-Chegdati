@@ -1,13 +1,27 @@
-# Cooperative Multi Agent Mapping and Surveillance with e-Puck Webots Robots
+# Cooperative Multi Agent Mapping and Surveillance with e-Puck Webots Robots 
 
-![Project Overview](docs/project_world.png)
+![Project Overview](docs/project_world.png)   
 
+## Table of Contents  
+- [Introduction](#introduction)  
+- [Project Structure](#project-strucutre)
+- [Workflow of the Team](#workflow-of-the-team)
+- [Robot Workflow](#robot-workflow)
+- [Inter-Robot Communication System](#inter-robot-communication-system)
+  - [Communication Architecture](#communication-architecture)
+  - [Object Detection Sharing](#object-detection-sharing)
+  - [Intelligent Alarm System](#intelligent-alarm-system)
+- [Object Detection and Alert System](#object-detection-and-alert-system)
+  - [Process Overview](#process-overview)
+  - [Model Performance Metrics](#model-performance-metrics)
+- [Installation](#installation)
+- [Contact](#contact-) 
 
-## Introduction
+## Introduction 
 
 This project explores the **collaborative** capabilities of **e-Puck robots** in **map parsing** and **surveillance**. Utilizing the **Webots** simulation environment, the **e-Puck** robots are programmed to work **cooperatively** to map a maze environment and perform surveillance tasks. The robots use **Q-learning** to navigate through the maze while avoiding **obstacles** and cover the entire map. Additionally, they utilize **YOLOv8** for object detection - if a **cat** is detected, an **alarm** is activated signifying the presence of a stray object that should not be in the monitored area.
 
-## Project Strucutre
+## Project Strucutre  
 
 ![Project Structure](docs/Project_Structure.png)         
 
@@ -22,20 +36,25 @@ The diagram above illustrates the workflow of the team, highlighting the process
 
 ## Robot Workflow
 
-Each robot in the team performs a series of steps to ensure effective map parsing and surveillance. The primary tasks performed by each robot are as follows:
+Each robot in the team follows a structured sequence of operations to ensure accurate map interpretation and effective area surveillance. The key tasks performed by each robot are outlined below:
 
-1. **Send Map Updates**: Robots calculate updates based on their sensor data and send these updates to their peers.
-2. **Receive Map Updates**: Robots receive updates from their peers and integrate this information into their own maps.
-3. **Path Planning**: Robots plan their paths based on the updated maps and the positions of their peers to avoid obstacles and cover the area efficiently.
-4. **Path Execution**: Robots execute the planned paths, adjusting their movements based on real-time sensor data.
+1. **Send Map Updates**: Each robot processes data from its sensors to compute map changes and promptly shares these updates with its teammates.
 
-![Robot Workflow](docs/robot_workflow.jpg)
+2. **Receive Map Updates**: Robots receive shared updates from peer robots and merge the incoming data into their own local maps to maintain a consistent and up-to-date understanding of the environment.
+
+3. **Path Planning**: Using the latest map information and the known positions of teammates, each robot computes an optimal path that avoids obstacles and ensures efficient area coverage with minimal redundancy.
+
+4. **Path Execution**: Robots execute their planned paths while continuously adapting to dynamic changes in the environment by responding to real-time sensor inputs.
+
+5. **Visual Detection and Alert**: Each robot utilizes a YOLO-based object detection model to identify specific targets or anomalies during its mission. Upon detecting a relevant object or threat, the robot triggers an audible alert using its onboard speaker to notify surrounding agents or human operators. 
+
+![Robot Workflow](docs/robot_workflow.jpg)   
 
 The diagram above illustrates the detailed workflow of the robots, showing the processes of sending and receiving map updates, path planning, and path execution.
 
 ## Inter-Robot Communication System
 
-The e-Puck robots utilize a sophisticated communication system to share information and coordinate their activities across the environment. This system enables efficient mapping and surveillance by allowing robots to exchange detection data and avoid redundant exploration.
+The e-Puck robots utilize a sophisticated communication system to share information and coordinate their activities across the environment. This system enables efficient mapping and surveillance by allowing robots to exchange detection data and avoid redundant exploration. 
 
 ### Communication Architecture
 
@@ -89,7 +108,7 @@ When another robot (e-puck(1)) detected a cat at 14:27:15, it created a new firs
 ```
 | Timestamp | Robot     | Object | ID | Position        | Status | Notes                      |
 |-----------|-----------|--------|----|-----------------|---------|-----------------------------|
-| 14:27:15  | e-puck(1) | Cat    | 1  | (-2.53, 4.02)   | First  | New cat detected by different robot |
+| 14:27:15  | e-puck(1) | Cat    | 1  | (-2.53, 4.02)   | First  | New cat detected by different robot | 
 ```
 
 ## Object Detection and Alert System
@@ -99,7 +118,7 @@ Each robot in the team is equipped with cameras that capture real-time images of
 ### Process Overview
 
 1. **Image Capture**: The robot's camera captures images in real-time as it navigates the environment.
-2. **Object Detection**: The captured images are sent to a YOLOv8 model, which performs object detection to identify various objects within the images.
+2. **Object Detection**: The captured images are sent to a YOLOv8 model, which performs object detection to identify various objects within the images. 
 3. **Alert Generation**: If a foreign object (e.g., a cat) is detected, the robot sends an alarm, providing details about the detected object and its location.
 
 ![Real-time Predictions](docs/vision.png)
@@ -163,13 +182,15 @@ C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
    - Make sure the "Synchronization" checkbox is ticked
 
 
-## Contact :
+## Contact : 
 
 - Project Creators : **Bellmir Yahya** & **Chegdati Chouaib**
 
 - Github : [Bellmir Yahya](https://github.com/Yasouimo) & [Chegdati Chouaib](https://github.com/chouaibneuralnets)
 
 - LinkedIn : [Bellmir Yahya](https://www.linkedin.com/in/yahya-bellmir-a54176284/) & [Chegdati Chouaib](https://www.linkedin.com/in/chouaib-chegdati-75a3a3302/)
+
+- Email : yahyabellmir@gmail.com & chegdatichouaib@gmail.com
 
 - Supervised By : **Pr.Hajji Tarik**
 
