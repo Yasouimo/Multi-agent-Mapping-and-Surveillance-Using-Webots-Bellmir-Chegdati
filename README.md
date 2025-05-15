@@ -118,7 +118,7 @@ Each robot in the team is equipped with cameras that capture real-time images of
 ### Process Overview
 
 1. **Image Capture**: The robot's camera captures images in real-time as it navigates the environment.
-2. **Object Detection**: The captured images are sent to a YOLOv8 model, which performs object detection to identify various objects within the images.
+2. **Object Detection**: The captured images are sent to a YOLOv8 model, which performs object detection to identify various objects within the images. 
 3. **Alert Generation**: If a foreign object (e.g., a cat) is detected, the robot sends an alarm, providing details about the detected object and its location.
 
 ![Real-time Predictions](docs/vision.png)
