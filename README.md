@@ -108,7 +108,7 @@ When another robot (e-puck(1)) detected a cat at 14:27:15, it created a new firs
 ```
 | Timestamp | Robot     | Object | ID | Position        | Status | Notes                      |
 |-----------|-----------|--------|----|-----------------|---------|-----------------------------|
-| 14:27:15  | e-puck(1) | Cat    | 1  | (-2.53, 4.02)   | First  | New cat detected by different robot |
+| 14:27:15  | e-puck(1) | Cat    | 1  | (-2.53, 4.02)   | First  | New cat detected by different robot | 
 ```
 
 ## Object Detection and Alert System
