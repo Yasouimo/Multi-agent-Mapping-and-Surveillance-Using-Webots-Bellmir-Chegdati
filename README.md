@@ -48,7 +48,7 @@ Each robot in the team follows a structured sequence of operations to ensure acc
 
 5. **Visual Detection and Alert**: Each robot utilizes a YOLO-based object detection model to identify specific targets or anomalies during its mission. Upon detecting a relevant object or threat, the robot triggers an audible alert using its onboard speaker to notify surrounding agents or human operators. 
 
-![Robot Workflow](docs/robot_workflow.jpg)  
+![Robot Workflow](docs/robot_workflow.jpg)   
 
 The diagram above illustrates the detailed workflow of the robots, showing the processes of sending and receiving map updates, path planning, and path execution.
 
