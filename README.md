@@ -36,21 +36,98 @@ The diagram above illustrates the workflow of the team, highlighting the process
 
 ## Robot Workflow
 
-Each robot in the team follows a structured sequence of operations to ensure accurate map interpretation and effective area surveillance. The key tasks performed by each robot are outlined below:
+### Core Operations
 
-1. **Send Map Updates**: Each robot processes data from its sensors to compute map changes and promptly shares these updates with its teammates.
+1. **Send Map Updates**: 
+   - Processes proximity sensor data to detect obstacles and free space
+   - Updates internal grid-based map representation
+   - Shares map updates every 50 simulation steps
+   - Converts tuple coordinates to JSON-serializable format for communication
 
-2. **Receive Map Updates**: Robots receive shared updates from peer robots and merge the incoming data into their own local maps to maintain a consistent and up-to-date understanding of the environment.
+2. **Receive Map Updates**:
+   - Merges incoming map data from other robots
+   - Maintains coordination statistics (maps received, cells shared)
+   - Prioritizes obstacle detections when merging conflicting data
+   - Tracks exploration coverage across the team
 
-3. **Path Planning**: Using the latest map information and the known positions of teammates, each robot computes an optimal path that avoids obstacles and ensures efficient area coverage with minimal redundancy.
+3. **Path Planning**:
+   - Uses A* pathfinding to identify routes to unexplored areas
+   - Coordinates planned paths with other robots
+   - Maintains frontiers of unexplored areas
+   - Implements collision avoidance with dynamic path adjustment
 
-4. **Path Execution**: Robots execute their planned paths while continuously adapting to dynamic changes in the environment by responding to real-time sensor inputs.
+4. **Path Execution**:
+   - Combines reinforcement learning for local navigation
+   - Real-time obstacle avoidance using proximity sensors
+   - Adaptive speed control based on environment
+   - Coordination with other robots' movements
 
-5. **Visual Detection and Alert**: Each robot utilizes a YOLO-based object detection model to identify specific targets or anomalies during its mission. Upon detecting a relevant object or threat, the robot triggers an audible alert using its onboard speaker to notify surrounding agents or human operators. 
+### Reinforcement Learning Implementation
 
-![Robot Workflow](docs/robot_workflow.jpg)   
+The robots use Q-learning for intelligent navigation and obstacle avoidance:
 
-The diagram above illustrates the detailed workflow of the robots, showing the processes of sending and receiving map updates, path planning, and path execution.
+```python
+# State representation
+state = (front_sensor, left_sensor, right_sensor)  # Binary values
+actions = ["Forward", "Left", "Right"]
+Q_table = {}  # Maps state-action pairs to values
+
+# Learning parameters
+alpha = 0.5      # Learning rate
+gamma = 0.8      # Discount factor
+epsilon = 0.3    # Exploration rate
+```
+
+#### Reward Structure:
+- **Positive Rewards**:
+  - +3: Exploring new grid cells
+  - +1: Successfully navigating free space
+  - +2: Finding optimal paths to unexplored areas
+
+- **Negative Rewards**:
+  - -5: Collision with obstacles
+  - -1: Proximity to walls/obstacles
+  - -2: Revisiting well-explored areas
+
+#### Q-Learning Update Rule:
+```python
+Q(s,a) = Q(s,a) + alpha * (R + gamma * max(Q(s')) - Q(s,a))
+```
+Where:
+- Q(s,a): Q-value for state s and action a
+- R: Immediate reward
+- s': Next state
+- alpha: Learning rate
+- gamma: Discount factor
+
+### Multi-Agent Coordination
+
+1. **Position Broadcasting**:
+   - Regular updates every 20 simulation steps
+   - Includes robot position, heading, and status
+   - Range-limited communication (20m radius)
+   - Unique color assignment for visualization
+
+2. **Detection Sharing**:
+   - Real-time sharing of object detections
+   - Cooperative alarm system for cat detection
+   - First-detection tracking and verification
+   - Position-stamped detection records
+
+3. **Map Merging**:
+   - Grid-based occupancy map sharing
+   - Conflict resolution favoring obstacle detection
+   - Coverage tracking and frontier identification
+   - Efficiency metrics for exploration
+
+### Visualization System
+
+The project includes a real-time visualization system showing:
+- Combined occupancy grid map
+- Robot positions and headings
+- Planned paths and frontiers
+- Exploration coverage
+- Multi-robot coordination status
 
 ## Inter-Robot Communication System
 
