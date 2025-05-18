@@ -4,7 +4,7 @@
 
 ## Table of Contents  
 - [Introduction](#introduction)  
-- [Project Structure](#project-strucutre)
+- [Project Structure](#project-strucutre) 
 - [Workflow of the Team](#workflow-of-the-team)
 - [Robot Workflow](#robot-workflow)
 - [Inter-Robot Communication System](#inter-robot-communication-system)
@@ -15,9 +15,9 @@
   - [Process Overview](#process-overview)
   - [Model Performance Metrics](#model-performance-metrics)
 - [Installation](#installation)
-- [Contact](#contact-) 
+- [Contact](#contact-)  
 
-## Introduction 
+## Introduction  
 
 This project explores the **collaborative** capabilities of **e-Puck robots** in **map parsing** and **surveillance**. Utilizing the **Webots** simulation environment, the **e-Puck** robots are programmed to work **cooperatively** to map a maze environment and perform surveillance tasks. The robots use **Q-learning** to navigate through the maze while avoiding **obstacles** and cover the entire map. Additionally, they utilize **YOLOv8** for object detection - if a **cat** is detected, an **alarm** is activated signifying the presence of a stray object that should not be in the monitored area.
 
@@ -26,7 +26,7 @@ This project explores the **collaborative** capabilities of **e-Puck robots** in
 ![Project Structure](docs/Project_Structure.png)         
 
 
-## Workflow of the Team
+## Workflow of the Team 
 
 In this experiment, each **e-Puck** robot collects environmental data using its onboard proximity sensors and cameras. These observations are used to continuously update the robot’s internal map and metadata. To promote efficient collaboration and situational awareness, all robots actively share their updated data with their peers. This real-time exchange of sensory information and map updates enables the robots to operate in a synchronized and informed manner, improving the overall performance of the multi-robot system.
 
