@@ -269,7 +269,7 @@ C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
 
 - Email : yahyabellmir@gmail.com & chegdatichouaib@gmail.com
 
-- Supervised By : **Pr.Hajji Tarik**
+- Supervised By : **Pr.Hajji Tarik**  [LinkedIn](https://www.linkedin.com/in/pr-tarik-hajji-3bb07321/)
 
 - Associated with : **ENSAM Meknès**
 
