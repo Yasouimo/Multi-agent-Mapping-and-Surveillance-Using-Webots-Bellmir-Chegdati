@@ -8,7 +8,7 @@
 - [Workflow of the Team](#workflow-of-the-team)
 - [Robot Workflow](#robot-workflow)
 - [Inter-Robot Communication System](#inter-robot-communication-system) 
-  - [Communication Architecture](#communication-architecture)
+  - [Communication Architecture](#communication-architecture) 
   - [Object Detection Sharing](#object-detection-sharing)
   - [Intelligent Alarm System](#intelligent-alarm-system)
 - [Object Detection and Alert System](#object-detection-and-alert-system)
