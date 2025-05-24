@@ -2,22 +2,22 @@
 
 ![Project Overview](docs/project_world.png)   
 
-## Table of Contents  
-- [Introduction](#introduction)  
+## Table of Contents   
+- [Introduction](#introduction)   
 - [Project Structure](#project-strucutre) 
 - [Workflow of the Team](#workflow-of-the-team)
 - [Robot Workflow](#robot-workflow)
-- [Inter-Robot Communication System](#inter-robot-communication-system)
-  - [Communication Architecture](#communication-architecture)
+- [Inter-Robot Communication System](#inter-robot-communication-system) 
+  - [Communication Architecture](#communication-architecture) 
   - [Object Detection Sharing](#object-detection-sharing)
   - [Intelligent Alarm System](#intelligent-alarm-system)
 - [Object Detection and Alert System](#object-detection-and-alert-system)
-  - [Process Overview](#process-overview)
+  - [Process Overview](#process-overview) 
   - [Model Performance Metrics](#model-performance-metrics)
-- [Installation](#installation)
+- [Installation](#installation) 
 - [Contact](#contact-)  
 
-## Introduction  
+## Introduction    
 
 This project explores the **collaborative** capabilities of **e-Puck robots** in **map parsing** and **surveillance**. Utilizing the **Webots** simulation environment, the **e-Puck** robots are programmed to work **cooperatively** to map a maze environment and perform surveillance tasks. The robots use **Q-learning** to navigate through the maze while avoiding **obstacles** and cover the entire map. Additionally, they utilize **YOLOv8** for object detection - if a **cat** is detected, an **alarm** is activated signifying the presence of a stray object that should not be in the monitored area.
 
@@ -28,7 +28,7 @@ This project explores the **collaborative** capabilities of **e-Puck robots** in
 
 ## Workflow of the Team 
 
-In this experiment, each **e-Puck** robot collects environmental data using its onboard proximity sensors and cameras. These observations are used to continuously update the robot’s internal map and metadata. To promote efficient collaboration and situational awareness, all robots actively share their updated data with their peers. This real-time exchange of sensory information and map updates enables the robots to operate in a synchronized and informed manner, improving the overall performance of the multi-robot system.
+In this experiment, each **e-Puck** robot collects environmental data using its onboard proximity sensors and cameras. These observations are used to continuously update the robot’s internal map and metadata. To promote efficient collaboration and situational awareness, all robots actively share their updated data with their peers. This real-time exchange of sensory information and map updates enables the robots to operate in a synchronized and informed manner, improving the overall performance of the multi-robot system. 
 
 ![Team Workflow](docs/team_workflow.jpg)
 
@@ -62,6 +62,8 @@ The diagram above illustrates the workflow of the team, highlighting the process
    - Adaptive speed control based on environment
    - Coordination with other robots' movements
 
+![Robot Workflow](docs/robot_workflow.jpg)
+
 ### Reinforcement Learning Implementation
 
 The robots use Q-learning for intelligent navigation and obstacle avoidance:
@@ -76,6 +78,7 @@ Q_table = {}  # Maps state-action pairs to values
 alpha = 0.5      # Learning rate
 gamma = 0.8      # Discount factor
 epsilon = 0.3    # Exploration rate
+
 ```
 
 #### Reward Structure:
@@ -269,7 +272,7 @@ C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
 
 - Email : yahyabellmir@gmail.com & chegdatichouaib@gmail.com
 
-- Supervised By : **Pr.Hajji Tarik**
+- Supervised By : **Pr.Hajji Tarik** | [LinkedIn](https://www.linkedin.com/in/pr-tarik-hajji-3bb07321/)
 
 - Associated with : **ENSAM Meknès**
 
