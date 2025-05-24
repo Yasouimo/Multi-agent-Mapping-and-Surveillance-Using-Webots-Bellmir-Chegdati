@@ -79,6 +79,7 @@ alpha = 0.5      # Learning rate
 gamma = 0.8      # Discount factor
 epsilon = 0.3    # Exploration rate
 
+# Q-Learning Update Rule:
 Q(s,a) = Q(s,a) + alpha * (R + gamma * max(Q(s')) - Q(s,a))
 ```
 
