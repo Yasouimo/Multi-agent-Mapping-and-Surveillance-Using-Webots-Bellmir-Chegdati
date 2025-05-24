@@ -62,6 +62,8 @@ The diagram above illustrates the workflow of the team, highlighting the process
    - Adaptive speed control based on environment
    - Coordination with other robots' movements
 
+![Robot Workflow](docs/robot_workflow.jpg)
+
 ### Reinforcement Learning Implementation
 
 The robots use Q-learning for intelligent navigation and obstacle avoidance:
