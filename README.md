@@ -3,7 +3,7 @@
 ![Project Overview](docs/project_world.png)    
 
 ## Table of Contents  
-- [Introduction](#introduction)  
+- [Introduction](#introduction)   
 - [Project Structure](#project-strucutre) 
 - [Workflow of the Team](#workflow-of-the-team)
 - [Robot Workflow](#robot-workflow)
