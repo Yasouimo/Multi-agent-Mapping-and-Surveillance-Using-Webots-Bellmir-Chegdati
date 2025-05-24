@@ -78,6 +78,8 @@ Q_table = {}  # Maps state-action pairs to values
 alpha = 0.5      # Learning rate
 gamma = 0.8      # Discount factor
 epsilon = 0.3    # Exploration rate
+
+Q(s,a) = Q(s,a) + alpha * (R + gamma * max(Q(s')) - Q(s,a))
 ```
 
 #### Reward Structure:
