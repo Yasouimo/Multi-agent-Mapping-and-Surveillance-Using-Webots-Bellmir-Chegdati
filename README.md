@@ -2,7 +2,7 @@
 
 ![Project Overview](docs/project_world.png)   
 
-## Table of Contents   
+## Table of Contents    
 - [Introduction](#introduction)   
 - [Project Structure](#project-structure) 
 - [Workflow of the Team](#workflow-of-the-team)
