@@ -8,7 +8,7 @@
 - [Workflow of the Team](#workflow-of-the-team)
 - [Robot Workflow](#robot-workflow)
   - [Core Operations](#core-operations)
-  - [Reinforcement Learning Implementation](#reinforcement-learning-implementation)
+  - [4-State Navigation System](#4-state-navigation-system)
   - [Multi-Agent Coordination](#multi-agent-coordination)
   - [Visualization System](#visualization-system)
 - [Inter-Robot Communication System](#inter-robot-communication-system) 
@@ -23,16 +23,15 @@
 
 ## Introduction    
 
-This project explores the **collaborative** capabilities of **e-Puck robots** in **map parsing** and **surveillance**. Utilizing the **Webots** simulation environment, the **e-Puck** robots are programmed to work **cooperatively** to map a maze environment and perform surveillance tasks. The robots use **Q-learning** to navigate through the maze while avoiding **obstacles** and cover the entire map. Additionally, they utilize **YOLOv8** for object detection - if a **cat** is detected, an **alarm** is activated signifying the presence of a stray object that should not be in the monitored area.
+This project explores the **collaborative** capabilities of **e-Puck robots** in **map parsing** and **surveillance**. Utilizing the **Webots** simulation environment, the **e-Puck** robots are programmed to work **cooperatively** to map a maze environment and perform surveillance tasks. The robots use a **deterministic 4-state navigation system** to navigate through the maze while avoiding **obstacles** and cover the entire map. Additionally, they utilize **YOLOv8** for object detection - if a **cat** is detected, an **alarm** is activated signifying the presence of a stray object that should not be in the monitored area.
 
-## Project Strucutre  
+## Project Structure  
 
 ![Project Structure](docs/Project_Structure.png)         
 
-
 ## Workflow of the Team 
 
-In this experiment, each **e-Puck** robot collects environmental data using its onboard proximity sensors and cameras. These observations are used to continuously update the robot’s internal map and metadata. To promote efficient collaboration and situational awareness, all robots actively share their updated data with their peers. This real-time exchange of sensory information and map updates enables the robots to operate in a synchronized and informed manner, improving the overall performance of the multi-robot system. 
+In this experiment, each **e-Puck** robot collects environmental data using its onboard proximity sensors and cameras. These observations are used to continuously update the robot's internal map and metadata. To promote efficient collaboration and situational awareness, all robots actively share their updated data with their peers through a **file-based data synchronization system**. This real-time exchange of sensory information and map updates enables the robots to operate in a synchronized and informed manner, improving the overall performance of the multi-robot system. 
 
 ![Team Workflow](docs/team_workflow.jpg)
 
@@ -42,99 +41,113 @@ The diagram above illustrates the workflow of the team, highlighting the process
 
 ### Core Operations
 
-1. **Send Map Updates**: 
+1. **Sensor-Based Mapping**: 
    - Processes proximity sensor data to detect obstacles and free space
-   - Updates internal grid-based map representation
-   - Shares map updates every 50 simulation steps
-   - Converts tuple coordinates to JSON-serializable format for communication
+   - Updates internal grid-based map representation using occupancy grid mapping
+   - Converts world coordinates to grid coordinates for precise mapping
+   - Ray-casting algorithm for accurate obstacle placement
 
-2. **Receive Map Updates**:
-   - Merges incoming map data from other robots
-   - Maintains coordination statistics (maps received, cells shared)
+2. **File-Based Data Synchronization**:
+   - Each robot saves its map data and state to individual pickle files
+   - Loads and merges data from all other robots every 50 simulation steps
+   - Maintains robot positions, targets, and timestamps for coordination
    - Prioritizes obstacle detections when merging conflicting data
-   - Tracks exploration coverage across the team
 
-3. **Path Planning**:
-   - Uses A* pathfinding to identify routes to unexplored areas
-   - Coordinates planned paths with other robots
-   - Maintains frontiers of unexplored areas
-   - Implements collision avoidance with dynamic path adjustment
+3. **Intelligent Target Assignment**:
+   - Uses frontier-based exploration to identify unexplored areas
+   - Applies K-means clustering to group frontier points into exploration targets
+   - Considers distance, robot proximity, and local openness for target scoring
+   - Prevents multiple robots from targeting the same area
 
-4. **Path Execution**:
-   - Combines reinforcement learning for local navigation
-   - Real-time obstacle avoidance using proximity sensors
-   - Adaptive speed control based on environment
-   - Coordination with other robots' movements
+4. **Adaptive Navigation**:
+   - Combines target-following with real-time obstacle avoidance
+   - Uses proportional steering control for smooth navigation
+   - Implements dynamic path adjustment based on sensor feedback
+   - Maintains exploration efficiency through intelligent state transitions
 
 ![Robot Workflow](docs/robot_workflow.jpg)
 
-### Reinforcement Learning Implementation
+### 4-State Navigation System
 
-The robots use Q-learning for intelligent navigation and obstacle avoidance:
+The robots implement a deterministic finite state machine with four distinct states for reliable navigation:
 
 ```python
-# State representation
-state = (front_sensor, left_sensor, right_sensor)  # Binary values
-actions = ["Forward", "Left", "Right"]
-Q_table = {}  # Maps state-action pairs to values
+# State Machine Implementation
+states = ["INITIAL_MANEUVER", "SELECTING_GOAL", "FOLLOWING_TARGET", "AVOIDING_OBSTACLE"]
 
-# Learning parameters
-alpha = 0.5      # Learning rate
-gamma = 0.8      # Discount factor
-epsilon = 0.3    # Exploration rate
-
+# State transitions based on sensor input and mission status
+current_state = "INITIAL_MANEUVER"
 ```
 
-#### Reward Structure:
-- **Positive Rewards**:
-  - +3: Exploring new grid cells
-  - +1: Successfully navigating free space
-  - +2: Finding optimal paths to unexplored areas
+#### State Descriptions:
 
-- **Negative Rewards**:
-  - -5: Collision with obstacles
-  - -1: Proximity to walls/obstacles
-  - -2: Revisiting well-explored areas
+1. **INITIAL_MANEUVER**:
+   - Robot moves forward for 75 simulation steps to clear starting position
+   - Ensures proper initialization of sensors and positioning systems
+   - Transitions automatically to goal selection after completion
 
-#### Q-Learning Update Rule:
+2. **SELECTING_GOAL**:
+   - Analyzes frontier map to identify unexplored regions
+   - Assigns exploration targets using intelligent scoring algorithm
+   - Coordinates with other robots to avoid target conflicts
+   - Spins to scan environment if no valid targets are available
+
+3. **FOLLOWING_TARGET**:
+   - Navigates toward assigned exploration target using proportional control
+   - Calculates angle difference and applies steering corrections
+   - Includes gentle wall-following behavior for corridor navigation
+   - Monitors proximity sensors for obstacle detection
+
+4. **AVOIDING_OBSTACLE**:
+   - Executes deterministic backup-and-turn maneuver when obstacles detected
+   - 15-step backward movement followed by 25-step rotation
+   - Ensures safe clearance from obstacles before resuming exploration
+   - Returns to goal selection for new target assignment
+
+#### Navigation Control Algorithm:
 ```python
-Q(s,a) = Q(s,a) + alpha * (R + gamma * max(Q(s')) - Q(s,a))
+# Target following with obstacle avoidance
+target_angle = math.atan2(target_vector[1], target_vector[0])
+angle_diff = target_angle - robot_orientation
+steer = np.clip(angle_diff * 1.5, -2.0, 2.0)
+
+# Side wall correction for corridor navigation
+side_steer = (right_sensor - left_sensor) / 400.0
+final_steer = steer + side_steer
+
+# Motor speed calculation
+left_speed = max_speed - final_steer * 2.0
+right_speed = max_speed + final_steer * 2.0
 ```
-Where:
-- Q(s,a): Q-value for state s and action a
-- R: Immediate reward
-- s': Next state
-- alpha: Learning rate
-- gamma: Discount factor
 
 ### Multi-Agent Coordination
 
-1. **Position Broadcasting**:
-   - Regular updates every 20 simulation steps
-   - Includes robot position, heading, and status
-   - Range-limited communication (20m radius)
-   - Unique color assignment for visualization
+1. **Cooperative Mapping**:
+   - File-based data exchange system for robust communication
+   - Real-time map merging with conflict resolution algorithms
+   - Shared exploration state tracking across all robots
+   - Coordinated frontier detection and assignment
 
-2. **Detection Sharing**:
-   - Real-time sharing of object detections
-   - Cooperative alarm system for cat detection
-   - First-detection tracking and verification
-   - Position-stamped detection records
+2. **Target Coordination**:
+   - Distance-based target assignment to prevent clustering
+   - Dynamic target reassignment when robots get too close
+   - Intelligent scoring system considering robot positions and map openness
+   - Fallback scanning behavior when no targets are available
 
-3. **Map Merging**:
-   - Grid-based occupancy map sharing
-   - Conflict resolution favoring obstacle detection
-   - Coverage tracking and frontier identification
-   - Efficiency metrics for exploration
+3. **Exploration Efficiency**:
+   - K-means clustering of frontier points for optimal target distribution
+   - Coverage tracking to measure exploration progress
+   - Adaptive exploration based on discovered map structure
+   - Collision avoidance through deterministic obstacle handling
 
 ### Visualization System
 
 The project includes a real-time visualization system showing:
-- Combined occupancy grid map
-- Robot positions and headings
-- Planned paths and frontiers
-- Exploration coverage
-- Multi-robot coordination status
+- Combined occupancy grid map with unknown (gray), free (white), and occupied (black) areas
+- Robot positions marked with colored circles (blue for current robot, orange for others)
+- Active exploration targets and planned paths
+- Frontier points highlighted in yellow for unexplored boundaries
+- Real-time map updates and robot coordination status
 
 ## Inter-Robot Communication System
 
