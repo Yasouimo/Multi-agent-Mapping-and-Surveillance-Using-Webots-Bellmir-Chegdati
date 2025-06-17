@@ -1,6 +1,24 @@
+# IMPORTANT: Install these dependencies in the correct order to avoid compatibility issues:
+# 1. First install PyTorch with older versions (required for YOLO compatibility):
+#    pip install torch<2.6 torchvision<0.16
+# 2. Then install ultralytics without additional dependencies:
+#    pip install ultralytics==8.2.42 --no-deps
+# 3. Finally install remaining dependencies manually
+
+# Core dependencies
 numpy==1.26.4
 opencv-python==4.11.0.86
-ultralytics==8.2.42
 pandas==2.0.3
 matplotlib==3.7.3
 scipy==1.10.0
+
+# PyTorch dependencies (install these first with older versions)
+torch<2.6
+torchvision<0.16
+
+# YOLO (install without dependencies as noted above)
+ultralytics==8.2.42
+
+# Additional dependencies needed when installing ultralytics without deps
+Pillow>=8.0.0
+pyyaml>=5.3.1
