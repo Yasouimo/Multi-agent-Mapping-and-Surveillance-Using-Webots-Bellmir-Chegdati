@@ -1,25 +1,25 @@
 # Cooperative Multi Agent Mapping and Surveillance with e-Puck Webots Robots
 
-![Project Overview](docs/project_world.png)    
+![Project Overview](docs/project_world.png)
 
-## Table of Contents    
-- [Introduction](#introduction)   
-- [Project Structure](#project-structure) 
+## Table of Contents
+- [Introduction](#introduction)
+- [Project Structure](#project-structure)
 - [Workflow of the Team](#workflow-of-the-team)
 - [Robot Workflow](#robot-workflow)
   - [Core Operations](#core-operations)
   - [4-State Navigation System](#4-state-navigation-system)
   - [Multi-Agent Coordination](#multi-agent-coordination)
   - [Visualization System](#visualization-system)
-- [Inter-Robot Communication System](#inter-robot-communication-system) 
-  - [Communication Architecture](#communication-architecture) 
+- [Inter-Robot Communication System](#inter-robot-communication-system)
+  - [Communication Architecture](#communication-architecture)
   - [Object Detection Sharing](#object-detection-sharing)
   - [Intelligent Alarm System](#intelligent-alarm-system)
 - [Object Detection and Alert System](#object-detection-and-alert-system)
-  - [Process Overview](#process-overview) 
+  - [Process Overview](#process-overview)
   - [Model Performance Metrics](#model-performance-metrics)
-- [Installation](#installation) 
-- [Contact](#contact-)  
+- [Installation](#installation)
+- [Contact](#contact-)
 
 ## Introduction     
 
