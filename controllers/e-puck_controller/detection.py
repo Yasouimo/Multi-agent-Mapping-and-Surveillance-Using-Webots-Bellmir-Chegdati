@@ -1,20 +1,20 @@
-from controller import Robot, Camera, Emitter
+from controller import Robot, Camera
 import numpy as np
 import os
 import cv2
 from datetime import datetime
 from ultralytics import YOLO
 import threading
+import winsound
 import time
-import winsound  # Replace playsound with winsound which is more reliable on Windows
 
 class ObjectDetector:
     def __init__(self, robot, communicator=None):
         self.robot = robot
         self.time_step = int(robot.getBasicTimeStep())
-        self.communicator = communicator  # Store the robot communicator reference
+        self.communicator = communicator
 
-        # Camera
+        # Camera setup
         self.camera = robot.getDevice("camera")
         if self.camera:
             self.camera.enable(self.time_step)
@@ -23,256 +23,125 @@ class ObjectDetector:
             print(f"Camera initialized: {self.camera_width}x{self.camera_height}")
         else:
             print("Warning: Camera not found")
-            self.camera_width = 0
-            self.camera_height = 0
+            self.camera = None
 
-        # Emitter (for backward compatibility)
-        try:
-            self.emitter = robot.getDevice("emitter")
-            if self.emitter:
-                print("Emitter initialized")
-                self.emitter.setChannel(1)
-            else:
-                print("Warning: Emitter not found")
-        except Exception as e:
-            print(f"Emitter not available: {e}")
-            self.emitter = None
-
-        # Detections folder
+        # Detection settings
         self.detection_folder = "detections"
         os.makedirs(self.detection_folder, exist_ok=True)
-
         self.target_classes = ['CardboardBox', 'Cat', 'OilBarrel', 'PlasticCrate', 'WoodenBox']
         self.alarm_classes = ["Cat"]
         self.alarm_sound_file = "mixkit-classic-short-alarm-993.wav"
-        self.detection_interval = 100
+        self.detection_interval = 100  # Run detection every 100 steps
         self.model = None
+        self.robot_position = (0, 0)
+        
+        # Alarm state
         self.alarm_playing = False
         self.alarm_thread = None
-        
-        # Last detection time (for cooperative detection)
-        self.last_detection_times = {cls: 0 for cls in self.target_classes}
-        self.robot_position = (0, 0)  # Default position
 
-        print("Object detector initialized with classes:", self.target_classes)
-        
-    def set_position(self, x, y):
-        """Set the current robot position for detection reports"""
-        self.robot_position = (x, y)
-
-    def play_robot_alarm(self):
-        """Play the alarm sound on the PC using winsound instead of playsound"""
-        try:
-            print("🔊 Playing alarm on PC...")
-            # Check if the sound file exists
-            if not os.path.exists(self.alarm_sound_file):
-                print(f"⚠️ Sound file not found: {self.alarm_sound_file}")
-                return False
-                
-            # Use winsound.PlaySound which is more reliable than playsound
-            winsound.PlaySound(self.alarm_sound_file, winsound.SND_FILENAME)
-            return True
-        except Exception as e:
-            print(f"⚠️ Error playing sound on PC: {e}")
-            return False
-
-    def send_alert_emitter(self, message):
-        """Send alert message via Emitter (legacy method)"""
-        if self.emitter:
-            try:
-                self.emitter.send(message.encode('utf-8'))
-                print(f"📡 Emitter sent message: {message}")
-            except Exception as e:
-                print(f"⚠️ Failed to send message via emitter: {e}")
-        else:
-            print("⚠️ No emitter available to send alert")
-
-    def alarm_thread_function(self):
-        print("\n" + "!" * 60)
-        print("🔊 ALARM! ALARM! Cat detected! 🔊")
-        print("!" * 60 + "\n")
-
-        self.play_robot_alarm()
-        self.alarm_playing = False
-
-    def play_alarm(self):
-        if self.alarm_playing:
-            print("⚠️ Alarm already playing, not starting another instance ⚠️")
-            return
-
-        self.alarm_playing = True
-        self.alarm_thread = threading.Thread(target=self.alarm_thread_function)
-        self.alarm_thread.daemon = True
-        self.alarm_thread.start()
-
-    def process_frame(self):
-        if not self.camera:
-            print("No camera available for detection")
-            return False, None
-
+    def load_model(self):
+        """Loads the YOLO model."""
         if self.model is None:
             try:
                 model_path = "best.pt"
                 if not os.path.exists(model_path):
-                    print(f"Error: Model file {model_path} not found!")
-                    return False, None
+                    print(f"Error: Model file '{model_path}' not found!")
+                    return False
                 self.model = YOLO(model_path)
-                print(f"YOLO model loaded: {self.model.names}")
+                print(f"YOLO model loaded with classes: {self.model.names}")
+                return True
             except Exception as e:
                 print(f"Failed to load YOLO model: {e}")
-                return False, None
+                return False
+        return True
 
-        try:
-            image = self.camera.getImage()
-            if not image:
-                print("Failed to get image from camera")
-                return False, None
-
+    def play_alarm_sound(self):
+        """Plays the alarm sound in a separate thread to avoid blocking."""
+        def alarm_task():
+            print("\n" + "!" * 60)
+            print("      🚨 🐱  ALARM! ALARM! A CAT HAS BEEN DETECTED! 🐱 🚨")
+            print("!" * 60 + "\n")
             try:
-                img = np.frombuffer(image, np.uint8).reshape((self.camera_height, self.camera_width, 4))
-                img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+                if os.path.exists(self.alarm_sound_file):
+                    # Play sound asynchronously to not halt the robot
+                    winsound.PlaySound(self.alarm_sound_file, winsound.SND_FILENAME | winsound.SND_ASYNC)
+                    time.sleep(3) # Cooldown to prevent sound spam
+                else:
+                    print(f"Warning: Alarm sound file not found at '{self.alarm_sound_file}'")
             except Exception as e:
-                print(f"Error converting image: {e}")
-                return False, None
+                print(f"Error playing alarm sound: {e}")
+            finally:
+                self.alarm_playing = False
 
-            try:
-                results = self.model(img, conf=0.25, verbose=False)
-            except Exception as e:
-                print(f"YOLO inference error: {e}")
-                return False, None
+        if not self.alarm_playing:
+            self.alarm_playing = True
+            self.alarm_thread = threading.Thread(target=alarm_task)
+            self.alarm_thread.daemon = True
+            self.alarm_thread.start()
 
-            alarm_triggered = False
-            detections_found = False
-            detection_results = []
+    def process_frame(self):
+        """Captures an image, runs detection, saves results, and broadcasts."""
+        if not self.camera or not self.load_model():
+            return False, []
 
-            if results and len(results) > 0:
-                result = results[0]
-                if hasattr(result, 'boxes') and len(result.boxes) > 0:
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    detections_found = True
+        image_data = self.camera.getImage()
+        if not image_data:
+            return False, []
 
-                    for i, box in enumerate(result.boxes):
-                        try:
-                            cls_id = int(box.cls[0])
-                            cls_name = self.model.names[cls_id]
-                            confidence = float(box.conf[0])
+        img = np.frombuffer(image_data, np.uint8).reshape((self.camera_height, self.camera_width, 4))
+        img_bgr = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
 
-                            if cls_name in self.target_classes and confidence > 0.3:
-                                x1, y1, x2, y2 = map(int, box.xyxy[0])
-                                img_with_box = img.copy()
-                                cv2.rectangle(img_with_box, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                                cv2.putText(img_with_box, f"{cls_name} {confidence:.2f}",
-                                            (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                                filename = f"{self.detection_folder}/{timestamp}_{cls_name}_{confidence:.2f}.jpg"
-                                cv2.imwrite(filename, img_with_box)
-                                print(f"Saved detection: {cls_name} ({confidence:.2f})")
-                                
-                                # Add to detection results
-                                detection_results.append({
-                                    "type": cls_name,
-                                    "confidence": confidence,
-                                    "box": (x1, y1, x2, y2)
-                                })
-
-                                # Update last detection time for this class
-                                self.last_detection_times[cls_name] = self.robot.getTime()
-
-                                if cls_name in self.alarm_classes:
-                                    alarm_triggered = True
-                                    print(f"Alarm class detected: {cls_name}")
-                                    
-                                # Broadcast detection through communicator
-                                if self.communicator:
-                                    try:
-                                        position = {"x": float(self.robot_position[0]), "y": float(self.robot_position[1])}
-                                        is_first = self.communicator.broadcast_detection(
-                                            cls_name,
-                                            confidence,
-                                            position
-                                        )
-                                        
-                                        # Special handling for Cat detections
-                                        if cls_name == "Cat" and is_first:
-                                            return True  # Trigger alarm
-                                    except Exception as e:
-                                        print(f"Failed to broadcast detection: {e}")
-                        except Exception as box_err:
-                            print(f"Error processing detection box: {box_err}")
-
-            if not detections_found:
-                print("No detections in this frame")
-
-            return alarm_triggered, detection_results
-
-        except Exception as e:
-            print(f"Error in process_frame: {e}")
-            return False, None
-
-    def broadcast_detections(self, detections):
-        """Broadcast all detections using the communicator"""
-        if not self.communicator or not detections:
-            return False
-            
-        x, y = self.robot_position
-        alarm_should_trigger = False
+        results = self.model(img_bgr, conf=0.3, verbose=False)
         
-        for detection in detections:
-            detection_type = detection["type"]
-            confidence = detection["confidence"]
+        alarm_triggered = False
+        detections_made = []
+        
+        if results:
+            result = results[0]
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
-            # Use the communicator to broadcast the detection
-            success = self.communicator.handle_detection_alert(
-                detection_type, 
-                confidence, 
-                x, 
-                y
-            )
-            
-            # If it's a cat detection with high confidence, trigger alarm
-            if detection_type == "Cat" and confidence > 0.5:
-                alarm_should_trigger = True
-                
-        return alarm_should_trigger  # Return True if we detected a cat
+            for i, box in enumerate(result.boxes):
+                cls_id = int(box.cls[0])
+                cls_name = self.model.names[cls_id]
+                confidence = float(box.conf[0])
 
-    def broadcast_detection(self, cls_name, confidence, position):
-        """Send detection through communicator"""
-        if self.communicator:
-            try:
-                pos_dict = {
-                    "x": float(position[0]),
-                    "y": float(position[1])
-                }
-                return self.communicator.broadcast_detection(
-                    cls_name,
-                    confidence,
-                    pos_dict
-                )
-            except Exception as e:
-                print(f"Failed to broadcast detection: {e}")
-        return False
+                if cls_name in self.target_classes:
+                    print(f"  -> Detected {cls_name} with confidence {confidence:.2f}")
 
-    def update(self, step_count, robot_x=None, robot_y=None):
-        if robot_x is not None and robot_y is not None:
-            self.set_position(robot_x, robot_y)
-            
-        if step_count % self.detection_interval == 0:
-            print(f"Running detection at step {step_count}")
-            try:
-                alarm_triggered, detections = self.process_frame()
-                
-                # If we have detections and a communicator, broadcast them
-                if detections and self.communicator:
-                    # Broadcast all detections and check if we should alarm
-                    should_alarm = self.broadcast_detections(detections)
+                    # --- FIXED: Draw bounding box and save the image ---
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                    # Create a fresh copy to draw on for each detection
+                    img_with_box = img_bgr.copy()
+                    cv2.rectangle(img_with_box, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    label = f"{cls_name} {confidence:.2f}"
+                    cv2.putText(img_with_box, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                     
-                    # Only trigger alarm if in cooperative mode we're allowed to
-                    if alarm_triggered and should_alarm:
-                        self.play_alarm()
-                        return True
-                elif alarm_triggered:
-                    # Legacy mode (no communicator)
-                    self.play_alarm()
-                    return True
+                    # Save the image with a unique filename
+                    filename = f"{self.detection_folder}/{timestamp}_{i}_{cls_name}.jpg"
+                    cv2.imwrite(filename, img_with_box)
+                    print(f"   -> Saved detection image to {filename}")
+
+                    # Append to list of detections this frame
+                    detections_made.append({"class": cls_name, "confidence": confidence})
+
+                    # Broadcast every detection
+                    if self.communicator:
+                        self.communicator.broadcast_detection(cls_name, confidence, self.robot_position)
+                    
+                    if cls_name in self.alarm_classes:
+                        alarm_triggered = True
+
+        return alarm_triggered, detections_made
+
+    def update(self, step_count, robot_x, robot_y):
+        """Main update loop called by the controller."""
+        self.robot_position = (robot_x, robot_y)
+
+        if step_count % self.detection_interval == 0:
+            print(f"\n--- Running Object Detection (Step {step_count}) ---")
+            try:
+                alarm_should_sound, detections = self.process_frame()
+                if alarm_should_sound:
+                    self.play_alarm_sound()
             except Exception as e:
-                print(f"Detection error: {e}")
-        return False
+                print(f"Error during detection cycle: {e}")
