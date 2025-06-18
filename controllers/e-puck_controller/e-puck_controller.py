@@ -1,9 +1,17 @@
+# e-puck_controller.py
+
 from controller import Robot
 import numpy as np
 import math
+import glob
+import pickle
+import os
+import time
 from robot_communication import RobotCommunicator
 from detection import ObjectDetector
 from cooperative_mapping import CooperativeMapping
+# <<< NOTE >>>: The visualizer is removed to focus on the simple, direct proof.
+# from cooperation_visualizer import CooperationVisualizer
 
 class EPuckController:
     def __init__(self):
@@ -30,7 +38,13 @@ class EPuckController:
         # --- Core Modules ---
         self.communicator = RobotCommunicator(self.robot)
         self.detector = ObjectDetector(self.robot, self.communicator)
+        # <<< MODIFIED >>>: Pass the robot's name to the mapping module
         self.mapping = CooperativeMapping(self.robot_name)
+
+        # <<< ADDED >>>: A dedicated target for cooperative actions.
+        # This will override any self-generated target.
+        self.cooperative_target = None
+        self.target_threshold = 0.15 # Slightly larger threshold for cooperative target
 
         # --- Odometry ---
         self.position = np.array([0.0, 0.0])
@@ -40,14 +54,11 @@ class EPuckController:
         self.wheel_radius = 0.02
         self.axle_length = 0.052
 
-        # --- Definitive 4-State Machine ---
-        self.state = "INITIAL_MANEUVER"
-        self.initial_maneuver_steps = 75
+        # --- State Machine ---
+        self.state = "EXPLORING" # Simplified state machine
         self.avoidance_step = 0
-        self.current_target = None
-        self.target_threshold = 0.1
-
-        print(f"[{self.robot_name}] Definitive 4-State controller initialized.")
+        
+        print(f"[{self.robot_name}] Simple Cooperative Controller initialized.")
 
     def set_motor_speeds(self, left, right):
         self.left_motor.setVelocity(np.clip(left, -self.max_speed, self.max_speed))
@@ -64,74 +75,118 @@ class EPuckController:
         self.position[0] += distance * math.cos(self.orientation)
         self.position[1] += distance * math.sin(self.orientation)
 
+    # <<< ADDED >>>: Function to check for and handle cooperative messages
+    def check_cooperative_messages(self):
+        messages = self.communicator.check_for_messages()
+        for msg in messages:
+            # Check for a detection message from another robot
+            if msg.get("type") == "detection" and self.robot_name != msg.get("robot_name"):
+                # To prevent all robots rushing to the same spot, let's have only one respond.
+                # A simple rule: The next robot in line by name will respond.
+                # This is a simple but effective coordination rule.
+                
+                # A more robust way to get robot index
+                try:
+                    my_id = int(self.robot_name.replace("e-puck", "").replace("(", "").replace(")", "")) if "e-puck(" in self.robot_name else 0
+                    sender_id = int(msg["robot_name"].replace("e-puck", "").replace("(", "").replace(")", "")) if "e-puck(" in msg["robot_name"] else 0
+
+                    # Let's assume 4 robots for this logic, adjust if you have a different number
+                    num_robots = 4 
+                    if my_id == (sender_id + 1) % num_robots:
+                        pos = msg.get("position")
+                        if pos:
+                            self.cooperative_target = np.array(pos)
+                            print("="*60)
+                            print(f"[{self.robot_name}] COOPERATION: Received detection from [{msg['robot_name']}]!")
+                            print(f"[{self.robot_name}] Abandoning my task to investigate location {pos}.")
+                            print("="*60)
+                except ValueError:
+                    # Fallback for names that don't fit the pattern
+                    pass
+
+
     def run(self):
-        """Main control loop with the 4-state machine."""
+        """Main control loop with simplified cooperative logic."""
         step_count = 0
+        # <<< MODIFIED >>>: Use the detection interval from the detector module for sync timing
+        sync_interval = self.detector.detection_interval 
+        
         while self.robot.step(self.time_step) != -1:
             step_count += 1
             self.update_pose()
-            self.mapping.update_map_from_sensors(self.position, self.orientation, [s.getValue() for s in self.sensors])
+            
+            # --- Always check for cooperative messages ---
+            self.check_cooperative_messages()
 
-            if step_count % 50 == 0:
-                self.mapping.sync_data(self.position, self.current_target, self.robot_name)
+            # --- High-Priority Cooperative Action ---
+            # <<< MODIFIED >>>: This block is the core of the new cooperative behavior.
+            # If we have a cooperative target, we handle it above all else.
+            if self.cooperative_target is not None:
+                target_vector = self.cooperative_target - self.position
+                distance_to_target = np.linalg.norm(target_vector)
 
-            # --- STATE MACHINE LOGIC ---
-            if self.state == "INITIAL_MANEUVER":
-                if step_count < self.initial_maneuver_steps:
-                    self.set_motor_speeds(self.max_speed, self.max_speed)
+                # If we've arrived, clear the cooperative target and go back to normal work.
+                if distance_to_target < self.target_threshold:
+                    print(f"[{self.robot_name}] Arrived at cooperative target. Resuming exploration.")
+                    self.cooperative_target = None
+                    self.state = "EXPLORING"
+                    self.set_motor_speeds(0, 0)
                 else:
-                    print(f"[{self.robot_name}] Initial maneuver complete.")
-                    self.set_motor_speeds(0, 0)
-                    self.state = "SELECTING_GOAL"
-
-            elif self.state == "SELECTING_GOAL":
-                self.current_target = self.mapping.assign_exploration_target(self.position, self.robot_name)
-                if self.current_target:
-                    print(f"[{self.robot_name}] New target acquired. Following.")
-                    self.state = "FOLLOWING_TARGET"
-                else: # No valid target found, spin to scan
-                    self.set_motor_speeds(self.max_speed * 0.6, -self.max_speed * 0.6)
-
-            elif self.state == "FOLLOWING_TARGET":
-                sensor_values = [s.getValue() for s in self.sensors]
-                # Check for imminent collision
-                if sensor_values[0] > 250 or sensor_values[7] > 250:
-                    print(f"[{self.robot_name}] Obstacle detected! Aborting target and avoiding.")
-                    self.state = "AVOIDING_OBSTACLE"
-                    self.avoidance_step = 0
-                    self.set_motor_speeds(0, 0)
-                    continue
-
-                if not self.current_target:
-                    self.state = "SELECTING_GOAL"
-                    continue
-                
-                target_vector = np.array(self.current_target) - self.position
-                if np.linalg.norm(target_vector) < self.target_threshold:
-                    print(f"[{self.robot_name}] Target reached.")
-                    self.current_target = None
-                    self.state = "SELECTING_GOAL"
-                else: # Steer towards target with minor wall avoidance
+                    # Steer towards the cooperative target
                     target_angle = math.atan2(target_vector[1], target_vector[0])
                     angle_diff = target_angle - self.orientation
+                    # Normalize angle
                     while angle_diff > np.pi: angle_diff -= 2 * np.pi
                     while angle_diff < -np.pi: angle_diff += 2 * np.pi
-                    steer = np.clip(angle_diff * 1.5, -2.0, 2.0)
-                    side_steer = (sensor_values[5] - sensor_values[2]) / 400.0 # Gentle nudge from side walls
-                    final_steer = steer + side_steer
-                    self.set_motor_speeds(self.max_speed - final_steer * 2.0, self.max_speed + final_steer * 2.0)
+                    
+                    steer = np.clip(angle_diff, -2.0, 2.0)
+                    self.set_motor_speeds(self.max_speed * 0.8 - steer, self.max_speed * 0.8 + steer)
+                
+                # Skip the normal state machine while handling a cooperative task
+                continue
 
-            elif self.state == "AVOIDING_OBSTACLE":
-                # Execute a clean backup-and-turn maneuver
-                if self.avoidance_step < 15: # Backup
-                    self.set_motor_speeds(-self.max_speed * 0.6, -self.max_speed * 0.6)
-                elif self.avoidance_step < 40: # Turn
-                     self.set_motor_speeds(self.max_speed * 0.7, -self.max_speed * 0.7)
-                else: # Maneuver complete, find a new goal
-                    print(f"[{self.robot_name}] Avoidance complete. Finding new goal.")
-                    self.state = "SELECTING_GOAL"
+            # --- Normal State Machine (Simplified) ---
+            sensor_values = [s.getValue() for s in self.sensors]
+
+            # Obstacle Avoidance takes precedence over exploration
+            is_obstacle = sensor_values[0] > 150 or sensor_values[7] > 150
+            if is_obstacle or self.state == "AVOIDING":
+                self.state = "AVOIDING"
+                # Simple avoidance: back up and turn
+                if self.avoidance_step < 15:
+                    self.set_motor_speeds(-self.max_speed * 0.5, -self.max_speed * 0.5)
+                elif self.avoidance_step < 45:
+                    self.set_motor_speeds(self.max_speed * 0.5, -self.max_speed * 0.5)
+                else:
+                    self.state = "EXPLORING" # Finished avoiding
                     self.avoidance_step = 0
                 self.avoidance_step += 1
+            else:
+                self.state = "EXPLORING"
+                # Simple exploration: drive forward with slight correction from side sensors
+                side_steer = (sensor_values[5] - sensor_values[2]) / 500.0
+                self.set_motor_speeds(self.max_speed - side_steer, self.max_speed + side_steer)
+
+            # --- Sensor and Detection Updates ---
+            # These run in the background regardless of state
+            self.detector.update(step_count, self.position[0], self.position[1])
+            self.mapping.update_map_from_sensors(self.position, self.orientation, sensor_values)
+            
+            # <<< CRITICAL FIX & ADDITION >>>
+            # This block was missing. It periodically saves this robot's data and loads
+            # data from other robots, which is the core of cooperative mapping.
+            if step_count > 0 and step_count % sync_interval == 0:
+                print(f"[{self.robot_name}] Syncing data with team...")
+                self.mapping.sync_data(
+                    my_pos=self.position,
+                    my_target=self.cooperative_target,
+                    my_robot_name=self.robot_name,
+                    current_state=self.state,
+                    new_detections=self.detector.last_detections
+                )
+                # Clear the detections after they have been synced
+                self.detector.last_detections.clear()
+
 
 if __name__ == "__main__":
     controller = EPuckController()
