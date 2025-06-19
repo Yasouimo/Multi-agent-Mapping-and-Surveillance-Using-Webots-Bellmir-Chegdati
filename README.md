@@ -5,7 +5,7 @@
 ## Table of Contents
 - [Introduction](#introduction)
 - [Project Structure](#project-structure)
-- [Workflow of the Team](#workflow-of-the-team)
+- [Workflow of the Team](#workflow-of-the-team) 
 - [Robot Workflow](#robot-workflow)
 - [Inter-Robot Communication System](#inter-robot-communication-system)
   - [Communication Architecture](#communication-architecture)
