@@ -2,15 +2,11 @@
 
 ![Project Overview](docs/project_world.png)
 
-## Table of Contents 
+## Table of Contents
 - [Introduction](#introduction)
 - [Project Structure](#project-structure)
 - [Workflow of the Team](#workflow-of-the-team)
 - [Robot Workflow](#robot-workflow)
-  - [Core Operations](#core-operations)
-  - [4-State Navigation System](#4-state-navigation-system)
-  - [Multi-Agent Coordination](#multi-agent-coordination)
-  - [Visualization System](#visualization-system)
 - [Inter-Robot Communication System](#inter-robot-communication-system)
   - [Communication Architecture](#communication-architecture)
   - [Object Detection Sharing](#object-detection-sharing)
@@ -39,115 +35,94 @@ The diagram above illustrates the workflow of the team, highlighting the process
 
 ## Robot Workflow
 
-### Core Operations
-
-1. **Sensor-Based Mapping**: 
-   - Processes proximity sensor data to detect obstacles and free space
-   - Updates internal grid-based map representation using occupancy grid mapping
-   - Converts world coordinates to grid coordinates for precise mapping
-   - Ray-casting algorithm for accurate obstacle placement
-
-2. **File-Based Data Synchronization**:
-   - Each robot saves its map data and state to individual pickle files
-   - Loads and merges data from all other robots every 50 simulation steps
-   - Maintains robot positions, targets, and timestamps for coordination
-   - Prioritizes obstacle detections when merging conflicting data
-
-3. **Intelligent Target Assignment**:
-   - Uses frontier-based exploration to identify unexplored areas
-   - Applies K-means clustering to group frontier points into exploration targets
-   - Considers distance, robot proximity, and local openness for target scoring
-   - Prevents multiple robots from targeting the same area
-
-4. **Adaptive Navigation**:
-   - Combines target-following with real-time obstacle avoidance
-   - Uses proportional steering control for smooth navigation
-   - Implements dynamic path adjustment based on sensor feedback
-   - Maintains exploration efficiency through intelligent state transitions
+The core logic for each robot is a continuous, independent cycle designed for robust, cooperative exploration and mapping. The process follows the operational flow illustrated in the diagram below, ensuring each robot can sense, share, plan, and act in a coordinated manner.
 
 ![Robot Workflow](docs/robot_workflow.jpg)
 
-### 4-State Navigation System
+Here is a breakdown of the main cycle (`Cycle Principal du Robot`):
 
-The robots implement a deterministic finite state machine with four distinct states for reliable navigation:
+### 1. Initialize Robot & Map
+Before entering the main loop, each robot initializes its core components. This includes setting up its motors, enabling proximity sensors, and creating a new, blank internal map of its environment.
 
 ```python
-# State Machine Implementation
-states = ["INITIAL_MANEUVER", "SELECTING_GOAL", "FOLLOWING_TARGET", "AVOIDING_OBSTACLE"]
+# In EPuckController.__init__
+self.robot = Robot()
+self.left_motor = self.robot.getDevice("left wheel motor")
+self.sensors = [self.robot.getDevice(f'ps{i}') for i in range(8)]
 
-# State transitions based on sensor input and mission status
-current_state = "INITIAL_MANEUVER"
+# The mapping module creates a blank grid map for this specific robot
+self.mapping = CooperativeMapping(self.robot_name)
 ```
 
-#### State Descriptions:
+### 2. Update Position & Local Map
+At the start of every cycle, the robot updates its state. It calculates its current position and orientation in the world using data from its wheel encoders (odometry). It then uses its proximity sensors to detect nearby walls and obstacles, updating its own local map.
 
-1. **INITIAL_MANEUVER**:
-   - Robot moves forward for 75 simulation steps to clear starting position
-   - Ensures proper initialization of sensors and positioning systems
-   - Transitions automatically to goal selection after completion
-
-2. **SELECTING_GOAL**:
-   - Analyzes frontier map to identify unexplored regions
-   - Assigns exploration targets using intelligent scoring algorithm
-   - Coordinates with other robots to avoid target conflicts
-   - Spins to scan environment if no valid targets are available
-
-3. **FOLLOWING_TARGET**:
-   - Navigates toward assigned exploration target using proportional control
-   - Calculates angle difference and applies steering corrections
-   - Includes gentle wall-following behavior for corridor navigation
-   - Monitors proximity sensors for obstacle detection
-
-4. **AVOIDING_OBSTACLE**:
-   - Executes deterministic backup-and-turn maneuver when obstacles detected
-   - 15-step backward movement followed by 25-step rotation
-   - Ensures safe clearance from obstacles before resuming exploration
-   - Returns to goal selection for new target assignment
-
-#### Navigation Control Algorithm:
 ```python
-# Target following with obstacle avoidance
-target_angle = math.atan2(target_vector[1], target_vector[0])
-angle_diff = target_angle - robot_orientation
-steer = np.clip(angle_diff * 1.5, -2.0, 2.0)
+# In the main loop of e-puck_controller.run()
+self.update_pose() # Update position (x, y) and orientation
+sensor_values = [s.getValue() for s in self.sensors]
 
-# Side wall correction for corridor navigation
-side_steer = (right_sensor - left_sensor) / 400.0
-final_steer = steer + side_steer
-
-# Motor speed calculation
-left_speed = max_speed - final_steer * 2.0
-right_speed = max_speed + final_steer * 2.0
+# Update the local map with what the sensors currently see
+self.mapping.update_map_from_sensors(self.position, self.orientation, sensor_values)
 ```
 
-### Multi-Agent Coordination
+### 3. Send & Merge Map Data (Data Synchronization)
+To collaborate, robots must share what they've learned. In this step, the robot performs a two-way data synchronization:
 
-1. **Cooperative Mapping**:
-   - File-based data exchange system for robust communication
-   - Real-time map merging with conflict resolution algorithms
-   - Shared exploration state tracking across all robots
-   - Coordinated frontier detection and assignment
+- **Send**: It saves its own updated map and current status (like its position and target) to a shared file.
+- **Receive & Merge**: It immediately loads the map data from all other robots. It then merges this information into its own map, prioritizing obstacle data to ensure the collective map is accurate.
 
-2. **Target Coordination**:
-   - Distance-based target assignment to prevent clustering
-   - Dynamic target reassignment when robots get too close
-   - Intelligent scoring system considering robot positions and map openness
-   - Fallback scanning behavior when no targets are available
+This is handled by the `sync_data()` method, which saves the robot's own data and then calls `load_all_robot_data()` to merge information from peers.
 
-3. **Exploration Efficiency**:
-   - K-means clustering of frontier points for optimal target distribution
-   - Coverage tracking to measure exploration progress
-   - Adaptive exploration based on discovered map structure
-   - Collision avoidance through deterministic obstacle handling
+```python
+# Simplified logic from cooperative_mapping.py
 
-### Visualization System
+# 1. Save my own data to a file
+my_data = {'map_update': self.grid_map, 'position': my_pos, ...}
+with open(self.my_data_file, 'wb') as f:
+    pickle.dump(my_data, f)
 
-The project includes a real-time visualization system showing:
-- Combined occupancy grid map with unknown (gray), free (white), and occupied (black) areas
-- Robot positions marked with colored circles (blue for current robot, orange for others)
-- Active exploration targets and planned paths
-- Frontier points highlighted in yellow for unexplored boundaries
-- Real-time map updates and robot coordination status
+# 2. Load and merge data from other robots
+all_data_files = glob.glob("robot_data/data_*.pkl")
+for file_path in all_data_files:
+    # ... (load data from file)
+    # Merge the maps, giving priority to obstacles
+    self.grid_map[other_robot_map == OCCUPIED] = OCCUPIED
+```
+
+### 4. Plan the Action
+With an updated and merged map, the robot decides what to do next. This is handled by a simple state machine:
+
+- **Obstacle Avoidance**: If a sensor detects an object directly in front, the robot enters an AVOIDING state to back up and turn. This has the highest priority.
+- **Cooperative Action**: If another robot has broadcast a detection (e.g., a "Cat"), this robot might receive a cooperative_target and navigate towards it.
+- **Exploration**: If there are no obstacles or cooperative tasks, the robot continues its default EXPLORING behavior, moving forward to discover new areas.
+
+```python
+# Simplified logic from e-puck_controller.run()
+is_obstacle = sensor_values[0] > 150 or sensor_values[7] > 150
+
+if is_obstacle:
+    # Plan is to execute the avoidance maneuver
+    self.state = "AVOIDING"
+elif self.cooperative_target is not None:
+    # Plan is to move towards the shared target
+    self.state = "FOLLOWING_COOPERATIVE_TARGET"
+else:
+    # Plan is to continue exploring
+    self.state = "EXPLORING"
+```
+
+### 5. Execute the Movement
+Based on the plan from the previous step, the controller sends commands to the motors. This results in the robot moving forward, turning to avoid an obstacle, or steering towards a target. Once the movement is executed, the cycle repeats, allowing the robot to continuously react to its environment and its teammates.
+
+```python
+# Example: executing the exploration movement
+side_steer = (sensor_values[5] - sensor_values[2]) / 500.0
+left_speed = self.max_speed - side_steer
+right_speed = self.max_speed + side_steer
+
+self.set_motor_speeds(left_speed, right_speed)
+```
 
 ## Inter-Robot Communication System
 
