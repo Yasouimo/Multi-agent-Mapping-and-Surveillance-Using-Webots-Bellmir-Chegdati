@@ -6,7 +6,7 @@
 # 3. Finally install remaining dependencies manually
 
 # Core dependencies
-numpy==1.26.4
+numpy==1.26.4 
 opencv-python==4.11.0.86
 pandas==2.0.3
 matplotlib==3.7.3
