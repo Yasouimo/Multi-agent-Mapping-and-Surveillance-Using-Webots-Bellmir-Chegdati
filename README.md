@@ -254,17 +254,4 @@ C:\Path\To\Python\Scripts\pip.exe install -r requirements.txt
    - Make sure the "Synchronization" checkbox is ticked
 
 
-## Contact : 
-
-- Project Creators : **Bellmir Yahya** & **Chegdati Chouaib**
-
-- Github : [Bellmir Yahya](https://github.com/Yasouimo) & [Chegdati Chouaib](https://github.com/chouaibneuralnets)
-
-- LinkedIn : [Bellmir Yahya](https://www.linkedin.com/in/yahya-bellmir-a54176284/) & [Chegdati Chouaib](https://www.linkedin.com/in/chouaib-chegdati-75a3a3302/)
-
-- Email : yahyabellmir@gmail.com & chegdatichouaib@gmail.com
-
-- Supervised By : **Pr.Hajji Tarik** | [LinkedIn](https://www.linkedin.com/in/pr-tarik-hajji-3bb07321/)
-
-- Associated with : **ENSAM Meknès**
 
